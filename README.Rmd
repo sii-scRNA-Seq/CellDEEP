@@ -1,0 +1,32 @@
+---
+title: "Tutorial"
+author: "Yiyi Cheng"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## OverView
+CellDEEP is package can used to generate differentially expressed(DE) genes with pooled cell. 
+
+##Installation
+```{r}
+
+```
+
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
