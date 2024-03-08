@@ -1,7 +1,3 @@
-library(unixtools)
-set.tempdir("/data/Dom/temporary")
-ulimit::memory_limit(300000)
-
 ##------ Testing ---------
 
 # # Uncomment to Read your dataset and test it
@@ -26,112 +22,21 @@ ulimit::memory_limit(300000)
 # DimPlot(only1sample, split.by = "bulk")
 
 ##------cell pooling functions ---------
-
-#levels: replicate_id = patient id etc, condition_id = condition, cluster_id = cluster
-nn_pseudobulk <- function(dataset, assay_name="RNA", min_virtual_cells=10, round_mtx=FALSE, verbose=FALSE){
-  exp_mtx <- matrix(,nrow = length(row.names(dataset@assays[[assay_name]])), ncol = 0)
-  row.names(exp_mtx) <- dataset[[assay_name]]@counts@Dimnames[[1]]
-  meta_data <- data.frame(group_label = "i", sample_label = "a", cluster_label = "c", cells_in_bulk = 0)
-  cells_meta_data <- data.frame(bulk = rep("c", length(colnames(dataset))), row.names = colnames(dataset))
-  counter <- 1
-  for (group in unique(dataset@meta.data$group_id)){
-    group_subset <- subset(dataset, group_id == as.character(group))
-    #print(group)
-
-    for (sample in unique(group_subset@meta.data$sample_id)){
-      # print(sample)
-      sample_subset <- subset(group_subset, sample_id == as.character(sample))
-
-      for (cluster in unique(sample_subset@meta.data$cluster_id)){
-        #print(paste0("cluster: ",cluster))
-        cluster_subset <- subset(sample_subset, cluster_id == as.character(cluster))
-        res <- 0.7
-
-        cluster_subset <- FindNeighbors(cluster_subset ,verbose = F)
-        cluster_subset <- FindClusters(cluster_subset,resolution = res,verbose = F)
-
-        while (length(unique(cluster_subset@active.ident)) < min_virtual_cells){
-
-          if (verbose) {
-            print(DefaultAssay(cluster_subset))
-            print(cluster_subset)
-          }
-
-          cluster_subset <- FindNeighbors(cluster_subset, verbose = F)
-
-          if (verbose) {
-            print(DefaultAssay(cluster_subset))
-            print(cluster_subset)
-          }
-
-          cluster_subset <- FindClusters(cluster_subset,resolution = res, verbose = F)
-          res <- res + 0.1
-        }
-
-        #print("end")
-        #print(levels(cluster_subset@active.ident))
-
-        for (sub_cluster in unique(cluster_subset@active.ident)){
-          #print(paste0("sub_cluster: ",sub_cluster))
-          cells <- colnames(cluster_subset)[which(cluster_subset@active.ident == sub_cluster)]
-
-          cells_meta_data[cells,1] <- paste0("c", counter)
-
-          subset_mtx <- cluster_subset@assays[[assay_name]]@counts[, cells]
-
-          pseudobulk <- rowMeans(subset_mtx)
-
-          pseudobulk <- data.frame(pseudobulk,row.names = rownames(exp_mtx))
-
-          exp_mtx <- cbind(exp_mtx,pseudobulk$pseudobulk)
-
-          meta_data <- rbind(meta_data, data.frame(group_label = group, sample_label = sample,cluster_label = cluster, cells_in_bulk = length(cells)))
-
-          counter <- counter + 1
-        }
-
-      }
-
-    }
-
-  }
-
-  if (round_mtx == TRUE){
-    exp_mtx <- round(exp_mtx)
-    #print("TRUE")
-  } else if (round_mtx == FALSE){
-    #don't do anything, just use the round_mtx as it is
-  }
-  else if (round_mtx == "10X"){
-    exp_mtx <- round(10*exp_mtx)
-    #print("10X")
-  } else {
-    stop("Error: readcounts parameter not known")
-  }
-
-  #row.names(exp_mtx) <- row.names(dataset)
-  meta_data <- meta_data[-1,]
-  #print(meta_data)
-  colnames(exp_mtx) <- paste0("c",seq(1, length(meta_data[,1]),1))
-  row.names(meta_data) <- paste0("c",seq(1, length(meta_data[,1]),1))
-  output_obj <- CreateSeuratObject(exp_mtx, project ="pseudobulk", meta.data= as.data.frame(meta_data))
-  dataset <- AddMetaData(dataset, cells_meta_data)
-  output_obj$sample_id <- output_obj$sample_label
-  output_obj$sample_label <- NULL
-  output_obj$cluster_id <- output_obj$cluster_label
-  output_obj$cluster_label <- NULL
-  output_obj$group_id <- output_obj$group_label
-  output_obj$group_label <- NULL
-  output_list <- list(output_obj, dataset)
-  names(output_list) <- c("pseudobulk", "original")
-
-  return(output_list)
-
-}
+#' @title Pooling cells by k-mean clustering.
+#'
+#' @rdname cellPooling.kmean.dev.yiyi
+#'
+#' @description This function pool cells by k-mean clustering.
+#'
+#'
+#' @param dataset A Seurat object
+#' @param n_cells number of cells to pool together
+#' @param nstart the nstart in kmeans clustering, which represents how many sets to start with.
+#' @param assay_name the assay to pool
+#' @param readcounts "mean" or "sum" or "10X". How to treat read counts when pool it. "mean" is mean the read counts and round; "sum" is sum; "10X" is the mean of read counts and 10 times it
 
 
-
-cellPooling.kmean.dev.yiyi <- function(dataset, n_cells= 10, nstart=100, assay_name="RNA", readcounts = "mean"){
+cellPooling.kmean.dev.yiyi <- function(dataset, n_cells= 10, nstart=100, assay_name="RNA", readcounts = "mean", cell_cutoff = 25){
 
   pseudo_cell_mtx <- matrix(, nrow=length(dataset[[assay_name]]@counts@Dimnames[[1]]), ncol=0)
 
@@ -187,7 +92,7 @@ cellPooling.kmean.dev.yiyi <- function(dataset, n_cells= 10, nstart=100, assay_n
             #print(sample_subset)
 
             #only keep going when cell number > 25
-            if(as.integer(length(colnames(sample_subset))) > 25){
+            if(as.integer(length(colnames(sample_subset))) > cell_cutoff){
 
             #Dom: choose k accordingly to the n of cells to pool in the parameter
             k = as.integer(length(colnames(sample_subset))/n_cells)+1
@@ -231,7 +136,7 @@ cellPooling.kmean.dev.yiyi <- function(dataset, n_cells= 10, nstart=100, assay_n
               exp_mtx <- as.matrix(pool) #make a matrix of cell information inside kcluster
               sum_total <- rowSums(exp_mtx)
 
-              if (readcounts == "round") {
+              if (readcounts == "mean") {
                 #mean_total <- round(sum_total/n_cells)
                 mean_total <- round(sum_total/cell_number)
                 mean_total <- data.frame(mean_total) #make a dataframe
@@ -298,6 +203,21 @@ cellPooling.kmean.dev.yiyi <- function(dataset, n_cells= 10, nstart=100, assay_n
 
 
 #random pooling + mean/sum option + 25 cells filter
+#' @title Pooling cells randomly.
+#'
+#' @rdname random.cellPooling.dev.yiyi
+#'
+#' @description This function pool cells randomly.
+#'
+#' @param dataset A seurat object
+#' @param n_cells The number of cells to pool together.
+#' @param assay_name The assay to pool based_on
+#' @param readcounts "sum" or "mean". How to generate read counts when pooling cells together.
+#'
+#' @return
+#' @export
+#'
+#' @examples
 random.cellPooling.dev.yiyi <- function(dataset, n_cells= 10, assay_name="RNA", readcounts = "mean"){
   pseudo_cell_mtx <- matrix(, nrow=length(dataset[[assay_name]]@counts@Dimnames[[1]]), ncol=0)
 
@@ -407,7 +327,17 @@ random.cellPooling.dev.yiyi <- function(dataset, n_cells= 10, assay_name="RNA", 
   return(pseudo_cell_seurat)
 }
 
-# split and give it new replicate for pesudobulk problem
+#' @title create 2 fake replicates for pesudobulk sample
+#'
+#' @param dataset The input Seurat object.
+#' @param sample_to_split The sample_id to split
+#' @param subid1 The 1st sub sample_id
+#' @param subid2 The 2nd sub sample_id
+#'
+#' @return
+#' @export
+#'
+#' @examples
 replicate.splitting <- function(dataset, sample_to_split = "ZC3H20_KO", subid1 = "ZC3H20_KO_1",
                                  subid2 = "ZC3H20_KO_2"){
   #Subset.Seurat <- Seurat.tbrucil
@@ -448,6 +378,17 @@ replicate.splitting <- function(dataset, sample_to_split = "ZC3H20_KO", subid1 =
 }
 
 #random pooling + mean/sum/10X option + 25 cells filter
+#' @title randomly pooling cells together, if sample to pool has less than 25 cells, jump it
+#'
+#' @param dataset A seurat object
+#' @param n_cells Number of cells to pool together
+#' @param assay_name Which assay to work on
+#' @param readcounts "sum" or "mean".
+#'
+#' @return
+#' @export
+#'
+#' @examples
 random.cellPooling.dev.yiyi.2 <- function(dataset, n_cells= 10, assay_name="RNA", readcounts = "mean"){
   pseudo_cell_mtx <- matrix(, nrow=length(dataset[[assay_name]]@counts@Dimnames[[1]]), ncol=0)
 

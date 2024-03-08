@@ -3,7 +3,25 @@
 # User input not only the ids it requires, but also does it need normalization/scale/UMAP generation
 # Output object will be a seurat object with sample_id, group_id and cluster_id.
 
+
+
 ################ This function allow you to easily subset every object to test them ############
+#' @title Subset Seurat object
+#'
+#' @rdname Subset.seurat.object
+#'
+#' @description This function take a seurat object as input, and subset it as user input.
+#'
+#' @param Seurat.object A Seurat object user want to subset
+#' @param Ident.to.subset The ident to subset, eg: cluster_id
+#' @param Specific.Idents.to.subset The ident want to susbet, eg: 5
+#'
+#' @return Subset Seurat object
+#' @export
+#'
+#' @examples
+#' \donttest{Subset.Seurat <- Subset.seurat.object(sample, "sample_id", AP1)}
+#'
 Subset.seurat.object <- function(Seurat.object, Ident.to.subset, Specific.Idents.to.subset) {
   Moment.Seurat.object = Seurat.object
 
@@ -24,6 +42,31 @@ Subset.seurat.object <- function(Seurat.object, Ident.to.subset, Specific.Idents
 
 
 ############### This function check a ground truth (muscat) table vs a list of genes DE ###############
+#' @title check a ground truth (muscat) table vs a list of genes DE
+#'
+#' @rdname check.ground.truth
+#'
+#' @description This function take a seurat object as input, and subset it as user input.
+#'
+#' @param ground.truth.table table with ground truth genes
+#' @param genes.DE The list of DE genes that user want to check
+#' @param title The title to put in output, eg: "MAST"
+#' @param verbose Show the info of ground truth or not
+#'
+#' @return ground truth table VS the DE gene list
+#' @export
+#'
+#' @examples
+#' \donttest{
+#' #Return DE
+#' markers.k.pooled.sum.15cell.MAST.DE <- return.DE(k.pooled.sum.15cell, "MAST")
+#' markers.k.pooled.sum.15cell.DESEQ.DE <- return.DE(k.pooled.sum.15cell, "DESeq2")
+#‘
+#'#Check ground truth
+#'check.ground.truth(Ground.truth, markers.k.pooled.sum.15cell.MAST.DE, title = "kmeans (sum) + MAST")
+#'check.ground.truth(Ground.truth, markers.k.pooled.sum.15cell.DESEQ.DE, title = "kmeans (sum) + DESeq2")
+#'}
+#'
 check.ground.truth <- function(ground.truth.table, genes.DE, title, verbose=FALSE) {
   #ground.truth.table = table with ground truth genes
   #genes.DE = list of genes DE that you want to check
@@ -80,6 +123,31 @@ check.ground.truth <- function(ground.truth.table, genes.DE, title, verbose=FALS
 
 ##### This function adjust input data ######
 
+#' @title Adjust input data format, Normalize/Scale/UMAP if needed, make the object ready for further steps.
+#'
+#' @rdname prepare_data
+#'
+#' @description This function adjust input data format to make it ready for further steps. Add "sample_id",
+#' "cluster_id" and "group_id". Can Normalize/Scale/RunUMAP if needed.
+#'
+#' @param obj A Seurat object, should have metadata for sample, cluster and group info.
+#' @param assay RNA as default. If assay = "covid", create a new seurat obejct based on RAW read counts of input
+#' data, and go with it.
+#' @param sample_id The metadata has sample information.
+#' @param group_id The metadata has group information.
+#' @param cluster_id The metadata has cluster information.
+#' @param Ident.to.subset The idents to subset(if user want to subset the data).
+#' @param Need.to.Norm_Transf If the object need normalizarion or not.
+#' @param Need.to.Scale If the object need scale or not
+#' @param Need.UMAP.generation If the object need generate an UMAP or not.
+#' @param Ground.truth Does this dataset have ground truth or not.
+#' @param Specific.Idents.to.subset If need subset, which element do you want to choose.
+#' @param file_path The file path to store ground truth
+#'
+#' @return
+#' @export
+#'
+#' @examples
 prepare_data <- function(obj, assay = "RNA",
                          sample_id, group_id, cluster_id,
                          Ident.to.subset = NULL,
@@ -87,12 +155,13 @@ prepare_data <- function(obj, assay = "RNA",
                          Need.to.Scale = FALSE,
                          Need.UMAP.generation = FALSE,
                          Ground.truth = FALSE,
-                         Specific.Idents.to.subset = NULL) {
+                         Specific.Idents.to.subset = NULL,
+                         file_path = NULL) {
 
   #get the data
   Original.Seurat <- obj
 
-  ##For covid PBMC only, create another object with "raw read counts only
+  ##For covid PBMC only, create another object with raw read counts only
   if (assay == "covid"){
     matrix <- as.matrix(Original.Seurat[["raw"]]@counts)
     Original.Seurat.test <- CreateSeuratObject(matrix)
@@ -166,13 +235,30 @@ prepare_data <- function(obj, assay = "RNA",
   Subset.Seurat@meta.data[["cluster_id"]] <- droplevels(as.factor(Subset.Seurat@meta.data[["cluster_id"]]))
   Subset.Seurat@meta.data[["sample_id"]] <- droplevels(as.factor(Subset.Seurat@meta.data[["sample_id"]]))
 
-  if (DE.group == group_id){
-    DE.group = "group_id"
-  } else if (DE.group == sample_id){
-    DE.group = "sample_id"
-  } else if (DE.group == cluster_id){
-    DE.group = "cluster_id"
-  }
+  # #Check if folders exist otherwise create them
+  # if (dir.exists(folder_Results_path)==FALSE) {
+  #   dir.create(folder_Results_path)
+  # }
+  #
+  # folder_middle_path = paste(folder_Results_path,folder_name,sep = "/")
+  # if (dir.exists(folder_middle_path)==FALSE) {
+  #   dir.create(folder_middle_path)
+  # }
+  #
+  # file_path = paste(folder_middle_path,output_filename,sep = "/")
+  #
+  # folder_Results_plot=paste(folder_middle_path,"Plots",sep = "/")
+  # if (dir.exists(folder_Results_plot)==FALSE) {
+  #   dir.create(folder_Results_plot)
+  # }
+
+  # if (DE.group == group_id){
+  #   DE.group = "group_id"
+  # } else if (DE.group == sample_id){
+  #   DE.group = "sample_id"
+  # } else if (DE.group == cluster_id){
+  #   DE.group = "cluster_id"
+  # }
 
   #if the object contains ground.truth, get it
   if (exists("Ground.truth")==TRUE) {
@@ -193,13 +279,15 @@ prepare_data <- function(obj, assay = "RNA",
       } else {
         stop("Ground truth not found")
       }
-    } else {
-      write("No Ground Truth.\n",file_path)
-      rm(Ground.truth)
     }
-  } else {
-    write("No Ground Truth.\n",file_path)
+    # else {
+    #   write("No Ground Truth.\n",file_path)
+    #   rm(Ground.truth)
+    # }
   }
+  # else {
+  #   write("No Ground Truth.\n",file_path)
+  # }
 
   return(Subset.Seurat)
 

@@ -1,9 +1,9 @@
-library(muscat)
-library(Seurat)
-library(data.table)
-library(edgeR)
-
-VERSION <- '0.1.0'
+# library(muscat)
+# library(Seurat)
+# library(data.table)
+# library(edgeR)
+#
+# VERSION <- '0.1.0'
 
 # ------Used version-------------------
 
