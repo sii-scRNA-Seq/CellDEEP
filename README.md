@@ -13,20 +13,20 @@ The goal of CellDEEP is to …
 You can install the development version of CellDEEP like so:
 
 ``` r
-# FILL THIS IN! HOW CAN PEOPLE INSTALL YOUR DEV PACKAGE?
+
+devtools::install_github("sii-scRNA-Seq/CellDEEP")
 ```
 
 ## Example
 
-This is a basic example which shows you how to solve a common problem:
+Before using, don’t forget library it:
 
 ``` r
 library(CellDEEP)
-## basic example code
 ```
 
 To quickly run CellDEEP, just need to prepare the data, then run
-`FindMarker.CellDEEP`
+`FindMarker.CellDEEP`:
 
 ``` r
 pdc <- prepare_data(sample, sample_id = "sample_id", group_id = "Worst_Clinical_Status", cluster_id = "initial_clustering")

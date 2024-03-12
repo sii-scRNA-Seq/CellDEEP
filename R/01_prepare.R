@@ -20,7 +20,7 @@
 #' @export
 #'
 #' @examples
-#' \donttest{Subset.Seurat <- Subset.seurat.object(sample, "sample_id", AP1)}
+#'
 #'
 Subset.seurat.object <- function(Seurat.object, Ident.to.subset, Specific.Idents.to.subset) {
   Moment.Seurat.object = Seurat.object
@@ -29,7 +29,7 @@ Subset.seurat.object <- function(Seurat.object, Ident.to.subset, Specific.Idents
   for (i in 1:length(Ident.to.subset)) {
     #print(i)
     #print(Ident.to.subset[[i]])
-    Idents(Moment.Seurat.object) <- Ident.to.subset[[i]]
+    Seurat::Idents(Moment.Seurat.object) <- Ident.to.subset[[i]]
     #print(Specific.Idents.to.subset[[i]])
     Moment.Seurat.object <- subset(Moment.Seurat.object, idents= Specific.Idents.to.subset[[i]])
     #Moment.Seurat.object <- subset(Moment.Seurat.object, subset = Specific.Idents.to.subset[[i]])
@@ -57,15 +57,7 @@ Subset.seurat.object <- function(Seurat.object, Ident.to.subset, Specific.Idents
 #' @export
 #'
 #' @examples
-#' \donttest{
-#' #Return DE
-#' markers.k.pooled.sum.15cell.MAST.DE <- return.DE(k.pooled.sum.15cell, "MAST")
-#' markers.k.pooled.sum.15cell.DESEQ.DE <- return.DE(k.pooled.sum.15cell, "DESeq2")
-#‘
-#'#Check ground truth
-#'check.ground.truth(Ground.truth, markers.k.pooled.sum.15cell.MAST.DE, title = "kmeans (sum) + MAST")
-#'check.ground.truth(Ground.truth, markers.k.pooled.sum.15cell.DESEQ.DE, title = "kmeans (sum) + DESeq2")
-#'}
+#'
 #'
 check.ground.truth <- function(ground.truth.table, genes.DE, title, verbose=FALSE) {
   #ground.truth.table = table with ground truth genes

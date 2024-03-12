@@ -21,14 +21,3 @@ ground truth table VS the DE gene list
 \description{
 This function take a seurat object as input, and subset it as user input.
 }
-\examples{
-\donttest{
-#Return DE
-markers.k.pooled.sum.15cell.MAST.DE <- return.DE(k.pooled.sum.15cell, "MAST")
-markers.k.pooled.sum.15cell.DESEQ.DE <- return.DE(k.pooled.sum.15cell, "DESeq2")
-#Check ground truth
-check.ground.truth(Ground.truth, markers.k.pooled.sum.15cell.MAST.DE, title = "kmeans (sum) + MAST")
-check.ground.truth(Ground.truth, markers.k.pooled.sum.15cell.DESEQ.DE, title = "kmeans (sum) + DESeq2")
-}
-
-}

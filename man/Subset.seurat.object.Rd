@@ -19,7 +19,3 @@ Subset Seurat object
 \description{
 This function take a seurat object as input, and subset it as user input.
 }
-\examples{
-\donttest{Subset.Seurat <- Subset.seurat.object(sample, "sample_id", AP1)}
-
-}
