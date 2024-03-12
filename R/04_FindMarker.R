@@ -18,7 +18,7 @@
 #'
 #' @examples
 return.DE <- function(dataset, test.use = "wilcox", DE.ident.1, DE.ident.2, DE.group, assay="RNA", p_cutoff = 0.05) {
-  markers <- FindMarkers(dataset, ident.1 = DE.ident.1, ident.2 = DE.ident.2, group.by = DE.group, test.use = test.use)
+  markers <- Seurat::FindMarkers(dataset, ident.1 = DE.ident.1, ident.2 = DE.ident.2, group.by = DE.group, test.use = test.use)
   #DE <- rownames(markers[markers$p_val_adj<0.05,])
   DE <- rownames(subset(markers, p_val_adj < p_cutoff, na.rm = T))
   print(length(DE))
@@ -88,10 +88,10 @@ FindMarker.CellDEEP <- function(object,
     print("group by:")
     print(group.by)
 
-    pooled.object <- NormalizeData(pooled.object)
-    pooled.object <- FindVariableFeatures(pooled.object, selection.method = "vst", nfeatures = 2000)
+    pooled.object <- Seurat::NormalizeData(pooled.object)
+    pooled.object <- Seurat::FindVariableFeatures(pooled.object, selection.method = "vst", nfeatures = 2000)
     all.genes <- rownames(pooled.object)
-    pooled.object <- ScaleData(pooled.object, features = all.genes)
+    pooled.object <- Seurat::ScaleData(pooled.object, features = all.genes)
 
     #Run FindMarker and return DE gene list
     de.markers <- return.DE(pooled.object,

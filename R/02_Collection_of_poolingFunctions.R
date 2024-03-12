@@ -4,8 +4,8 @@
 
 # Real.Seurat.subset <- readRDS("/data/Dom/datathon/Macrophage_cluster0_onlyHealhtyResistant.rds")
 # Real.Seurat.subset
-# DimPlot(Real.Seurat.subset)
-# DimPlot(Real.Seurat.subset, split.by = "group_id")
+# Seurat::DimPlot(Real.Seurat.subset)
+# Seurat::DimPlot(Real.Seurat.subset, split.by = "group_id")
 #
 # #test <- cellPooling.kmean.dev.dom2(Real.Seurat.subset, n_cells = 10, readcounts = "sum")
 # test <- nn_pseudobulk(Real.Seurat.subset)
@@ -19,7 +19,7 @@
 #
 # Idents(test[["original"]]) <- "sample_id"
 # only1sample <- subset(test[["original"]], idents = "SA144")
-# DimPlot(only1sample, split.by = "bulk")
+# Seurat::DimPlot(only1sample, split.by = "bulk")
 
 ##------cell pooling functions ---------
 #' @title Pooling cells by k-mean clustering.
@@ -38,7 +38,7 @@
 
 cellPooling.kmean.dev.yiyi <- function(dataset, n_cells= 10, nstart=100, assay_name="RNA", readcounts = "mean", cell_cutoff = 25){
 
-  pseudo_cell_mtx <- matrix(, nrow=length(dataset[[assay_name]]@counts@Dimnames[[1]]), ncol=0)
+  pseudo_cell_mtx <- matrix(, nrow=length(dataset[[assay_name]]$counts@Dimnames[[1]]), ncol=0)
 
   #Here: filter cluster(after all splitting) whose cell number < 25
   meta_data = c()
@@ -180,7 +180,7 @@ cellPooling.kmean.dev.yiyi <- function(dataset, n_cells= 10, nstart=100, assay_n
   #Create Seurat object
   row.names(pseudo_cell_mtx) <- dataset[[assay_name]]@counts@Dimnames[[1]]
   colnames(pseudo_cell_mtx) <- meta_data
-  pseudo_cell_seurat <- CreateSeuratObject(counts = pseudo_cell_mtx)
+  pseudo_cell_seurat <- Seurat::CreateSeuratObject(counts = pseudo_cell_mtx)
   pseudo_cell_seurat$group_id <- group_id
   pseudo_cell_seurat$sample_id <- sample_id
   pseudo_cell_seurat$cluster_id <- cluster_id
@@ -192,7 +192,7 @@ cellPooling.kmean.dev.yiyi <- function(dataset, n_cells= 10, nstart=100, assay_n
 
   dataset <- AddMetaData(dataset, metadata = ktable, col.name = "Pooled_kmeans_cells")
   Idents(dataset) <- "Pooled_kmeans_cells"
-  print(DimPlot(dataset, split.by = "sample_id",ncol = 4) + NoLegend())
+  print(Seurat::DimPlot(dataset, split.by = "sample_id",ncol = 4) + NoLegend())
 
   table(pseudo_cell_seurat@meta.data$sample_id)
 
@@ -320,7 +320,7 @@ random.cellPooling.dev.yiyi <- function(dataset, n_cells= 10, assay_name="RNA", 
   #split UMAP
   dataset <- AddMetaData(dataset, metadata = rtable, col.name = "Pooled_randomly_cells")
   Idents(dataset) <- "Pooled_randomly_cells"
-  print(DimPlot(dataset, split.by = "sample_id",ncol = 4) + NoLegend())
+  print(Seurat::DimPlot(dataset, split.by = "sample_id",ncol = 4) + NoLegend())
 
   table(pseudo_cell_seurat@meta.data$sample_id)
 
@@ -495,7 +495,7 @@ random.cellPooling.dev.yiyi.2 <- function(dataset, n_cells= 10, assay_name="RNA"
   #split UMAP
   dataset <- AddMetaData(dataset, metadata = rtable, col.name = "Pooled_randomly_cells")
   Idents(dataset) <- "Pooled_randomly_cells"
-  print(DimPlot(dataset, split.by = "sample_id",ncol = 4) + NoLegend())
+  print(Seurat::DimPlot(dataset, split.by = "sample_id",ncol = 4) + NoLegend())
 
   table(pseudo_cell_seurat@meta.data$sample_id)
 
@@ -784,7 +784,7 @@ cellPooling.kmean.dev.dom2 <- function(dataset, n_cells= 10, nstart=100, assay_n
 
   dataset <- AddMetaData(dataset, metadata = ktable, col.name = "Pooled_kmeans_cells")
   Idents(dataset) <- "Pooled_kmeans_cells"
-  print(DimPlot(dataset, split.by = "sample_id") + NoLegend())
+  print(Seurat::DimPlot(dataset, split.by = "sample_id") + NoLegend())
 
   table(pseudo_cell_seurat@meta.data$sample_id)
 

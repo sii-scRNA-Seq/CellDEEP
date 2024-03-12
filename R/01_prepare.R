@@ -31,9 +31,9 @@ Subset.seurat.object <- function(Seurat.object, Ident.to.subset, Specific.Idents
     #print(Ident.to.subset[[i]])
     Seurat::Idents(Moment.Seurat.object) <- Ident.to.subset[[i]]
     #print(Specific.Idents.to.subset[[i]])
-    Moment.Seurat.object <- subset(Moment.Seurat.object, idents= Specific.Idents.to.subset[[i]])
+    Moment.Seurat.object <- Seurat::subset(Moment.Seurat.object, idents= Specific.Idents.to.subset[[i]])
     #Moment.Seurat.object <- subset(Moment.Seurat.object, subset = Specific.Idents.to.subset[[i]])
-    Moment.Seurat.object <- ScaleData(Moment.Seurat.object)
+    Moment.Seurat.object <- Seurat::ScaleData(Moment.Seurat.object)
   }
   #print("#######Done")
   print(Moment.Seurat.object)
@@ -156,7 +156,7 @@ prepare_data <- function(obj, assay = "RNA",
   ##For covid PBMC only, create another object with raw read counts only
   if (assay == "covid"){
     matrix <- as.matrix(Original.Seurat[["raw"]]@counts)
-    Original.Seurat.test <- CreateSeuratObject(matrix)
+    Original.Seurat.test <- Seurat::CreateSeuratObject(matrix)
     Original.Seurat.test@meta.data <- Original.Seurat@meta.data
     Original.Seurat.test@reductions <- Original.Seurat@reductions
     Original.Seurat <- Original.Seurat.test
@@ -191,22 +191,22 @@ prepare_data <- function(obj, assay = "RNA",
   table(Subset.Seurat@meta.data[[cluster_id]])
 
   if (Need.to.Norm_Transf == TRUE) {
-    Subset.Seurat <- NormalizeData(Subset.Seurat)
-    Subset.Seurat <- FindVariableFeatures(Subset.Seurat, selection.method = "vst", nfeatures = 2000)
-    Subset.Seurat <- ScaleData(Subset.Seurat, features = rownames(Subset.Seurat))
+    Subset.Seurat <- Seurat::NormalizeData(Subset.Seurat)
+    Subset.Seurat <- Seurat::FindVariableFeatures(Subset.Seurat, selection.method = "vst", nfeatures = 2000)
+    Subset.Seurat <- Seurat::ScaleData(Subset.Seurat, features = rownames(Subset.Seurat))
   }
 
   if (Need.to.Scale == TRUE) {
-    Subset.Seurat <- ScaleData(Subset.Seurat, features = rownames(Subset.Seurat))
+    Subset.Seurat <- Seurat::ScaleData(Subset.Seurat, features = rownames(Subset.Seurat))
   }
 
   if (Need.UMAP.generation == TRUE) {
-    Subset.Seurat <- RunPCA(object = Subset.Seurat, npcs = 30)
-    ElbowPlot(object = Subset.Seurat, ndims  = 30)
-    DimPlot(Subset.Seurat, reduction = "pca")
-    Subset.Seurat <- FindNeighbors(Subset.Seurat, dims = 1:20)
-    Subset.Seurat <- FindClusters(Subset.Seurat,resolution = 0.1)
-    Subset.Seurat <- RunUMAP(Subset.Seurat, dims = 1:20)
+    Subset.Seurat <- Seurat::RunPCA(object = Subset.Seurat, npcs = 30)
+    Seurat::ElbowPlot(object = Subset.Seurat, ndims  = 30)
+    Seurat::DimPlot(Subset.Seurat, reduction = "pca")
+    Subset.Seurat <- Seurat::FindNeighbors(Subset.Seurat, dims = 1:20)
+    Subset.Seurat <- Seurat::FindClusters(Subset.Seurat,resolution = 0.1)
+    Subset.Seurat <- Seurat::RunUMAP(Subset.Seurat, dims = 1:20)
   }
 
   #Subset.Seurat <- subset(x = emma, subset = seurat_clusters == "2")

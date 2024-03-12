@@ -12,8 +12,11 @@ The goal of CellDEEP is to …
 
 You can install the development version of CellDEEP like so:
 
-``` r
+Please download the package from github directly, then load the Rproject
+file.
 
+``` r
+#This is not working for now
 devtools::install_github("sii-scRNA-Seq/CellDEEP")
 ```
 
@@ -29,9 +32,9 @@ To quickly run CellDEEP, just need to prepare the data, then run
 `FindMarker.CellDEEP`:
 
 ``` r
-pdc <- prepare_data(sample, sample_id = "sample_id", group_id = "Worst_Clinical_Status", cluster_id = "initial_clustering")
+pdc <- prepare_data(pDC, sample_id = "sample_id", group_id = "Worst_Clinical_Status", cluster_id = "initial_clustering", assay = "covid")
 
-de.test <- FindMarker.CellDEEP(pdc, Pool = TRUE, ident.1 = "Healthy", ident.2 = "Severe", group.by = "group_id", n_cells = 6, cell_cutoff = 10)
+de.test <- FindMarker.CellDEEP(pdc, Pool = TRUE, ident.1 = "Healthy", ident.2 = "Severe", group.by = "group_id", n_cells = 6, cell_cutoff = 10, assay = "RNA")
 ```
 
 You’ll still need to render `README.Rmd` regularly, to keep `README.md`
