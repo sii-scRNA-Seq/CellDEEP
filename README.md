@@ -26,12 +26,20 @@ Before using, don’t forget library it:
 
 ``` r
 library(CellDEEP)
+
+library(devtools)
+#> Loading required package: usethis
+load_all()
+#> ℹ Loading CellDEEP
 ```
 
 To quickly run CellDEEP, just need to prepare the data, then run
 `FindMarker.CellDEEP`:
 
 ``` r
+#This is a test to see if the code is working, will reutrn 0 DE genes.
+#For a actual test, please use data like: /datastore/Yiyi/datathon/Test_Dataset/covid_pDC_severeVShealthy.rds
+
 pdc <- prepare_data(pDC, sample_id = "sample_id", group_id = "Worst_Clinical_Status", cluster_id = "initial_clustering", assay = "covid")
 
 de.test <- FindMarker.CellDEEP(pdc, Pool = TRUE, ident.1 = "Healthy", ident.2 = "Severe", group.by = "group_id", n_cells = 6, cell_cutoff = 10, assay = "RNA")

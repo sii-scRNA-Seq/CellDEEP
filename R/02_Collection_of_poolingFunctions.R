@@ -320,7 +320,7 @@ random.cellPooling.dev.yiyi <- function(dataset, n_cells= 10, assay_name="RNA", 
   #split UMAP
   dataset <- AddMetaData(dataset, metadata = rtable, col.name = "Pooled_randomly_cells")
   Idents(dataset) <- "Pooled_randomly_cells"
-  print(Seurat::DimPlot(dataset, split.by = "sample_id",ncol = 4) + NoLegend())
+  print(Seurat::DimPlot(dataset, split.by = "sample_id",ncol = 4))
 
   table(pseudo_cell_seurat@meta.data$sample_id)
 
