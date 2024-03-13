@@ -37,7 +37,8 @@
 
 
 cellPooling.kmean.dev.yiyi <- function(dataset, n_cells= 10, nstart=100, assay_name="RNA", readcounts = "mean", cell_cutoff = 25){
-
+  print(dataset)
+  print(assay_name)
   pseudo_cell_mtx <- matrix(, nrow=length(dataset[[assay_name]]$counts@Dimnames[[1]]), ncol=0)
 
   #Here: filter cluster(after all splitting) whose cell number < 25
@@ -132,7 +133,9 @@ cellPooling.kmean.dev.yiyi <- function(dataset, n_cells= 10, nstart=100, assay_n
               # print(length(cells))
 
               cell_number <- length(cells) #get cell number that would be pooled
-              pool <- k.clusters[[assay_name]]@counts[,cells] #get the cell information inside kcluster
+              print("1")
+              pool <- k.clusters[[assay_name]]$counts[,cells] #get the cell information inside kcluster
+              print("2")
               exp_mtx <- as.matrix(pool) #make a matrix of cell information inside kcluster
               sum_total <- rowSums(exp_mtx)
 

@@ -15,6 +15,7 @@ FindMarker.CellDEEP(
   n_cells = 10,
   assay = "RNA",
   cell_cutoff = 25,
+  pool_way = "kmean",
   ...
 )
 }
