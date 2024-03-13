@@ -59,6 +59,7 @@ FindMarker.CellDEEP <- function(object,
                        n_cells = 10,
                        assay = "RNA",
                        cell_cutoff = 25,
+                       pool_way = "kmean",
                        ...
                        ){
 
@@ -76,30 +77,60 @@ FindMarker.CellDEEP <- function(object,
 
     print("Start Pooling.....")
 
-    #Pooling the cell
-    pooled.object <- cellPooling.kmean.dev.yiyi(object, readcounts = readcounts, n_cells= n_cells, assay_name = assay, cell_cutoff = cell_cutoff )
+    if (pool_way == "kmean") {
+      #Pooling the cell
+      pooled.object <- cellPooling.kmean.dev.yiyi(object, readcounts = readcounts, n_cells= n_cells, assay_name = assay, cell_cutoff = cell_cutoff )
 
-    print("FindMarker running.....")
+      print("FindMarker running.....")
 
-    print("1st ident is:")
-    print(ident.1)
-    print("2nd ident is:")
-    print(ident.2)
-    print("group by:")
-    print(group.by)
+      print("1st ident is:")
+      print(ident.1)
+      print("2nd ident is:")
+      print(ident.2)
+      print("group by:")
+      print(group.by)
 
-    pooled.object <- Seurat::NormalizeData(pooled.object)
-    pooled.object <- Seurat::FindVariableFeatures(pooled.object, selection.method = "vst", nfeatures = 2000)
-    all.genes <- rownames(pooled.object)
-    pooled.object <- Seurat::ScaleData(pooled.object, features = all.genes)
+      pooled.object <- Seurat::NormalizeData(pooled.object)
+      pooled.object <- Seurat::FindVariableFeatures(pooled.object, selection.method = "vst", nfeatures = 2000)
+      all.genes <- rownames(pooled.object)
+      pooled.object <- Seurat::ScaleData(pooled.object, features = all.genes)
 
-    #Run FindMarker and return DE gene list
-    de.markers <- return.DE(pooled.object,
-                            DE.ident.1 = ident.1,
-                            DE.ident.2 = ident.2,
-                            DE.group = group.by,
-                            test.use = test.use,
-                            ...)
+      #Run FindMarker and return DE gene list
+      de.markers <- return.DE(pooled.object,
+                              DE.ident.1 = ident.1,
+                              DE.ident.2 = ident.2,
+                              DE.group = group.by,
+                              test.use = test.use,
+                              ...)
+    }else if(pool_way == "random"){
+      #Pooling the cell
+      pooled.object <- random.cellPooling.dev.yiyi(object, readcounts = readcounts, n_cells= n_cells, assay_name = assay, cell_cutoff = cell_cutoff )
+
+      print("FindMarker running.....")
+
+      print("1st ident is:")
+      print(ident.1)
+      print("2nd ident is:")
+      print(ident.2)
+      print("group by:")
+      print(group.by)
+
+      pooled.object <- Seurat::NormalizeData(pooled.object)
+      pooled.object <- Seurat::FindVariableFeatures(pooled.object, selection.method = "vst", nfeatures = 2000)
+      all.genes <- rownames(pooled.object)
+      pooled.object <- Seurat::ScaleData(pooled.object, features = all.genes)
+
+      #Run FindMarker and return DE gene list
+      de.markers <- return.DE(pooled.object,
+                              DE.ident.1 = ident.1,
+                              DE.ident.2 = ident.2,
+                              DE.group = group.by,
+                              test.use = test.use,
+                              ...)
+    }else{
+      print("Wrong pooling way, kmean or random")
+    }
+
     }
 
   #return(pooled.object)
