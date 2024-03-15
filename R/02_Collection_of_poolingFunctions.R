@@ -278,7 +278,7 @@ random.cellPooling.dev.yiyi <- function(dataset, n_cells= 10, assay_name="RNA", 
               # print("cell list end!!")
 
               real.cells <- subset(real.cells, !(real.cells %in% pool)) #delete those n cells from the subset
-              pool <- cluster_subset[[assay_name]]@counts[,pool] #get the n cells readcounts(before was only names)
+              pool <- cluster_subset[[assay_name]]$counts[,pool] #get the n cells readcounts(before was only names)
               exp_mtx <- as.matrix(pool) #make a matrix and the mean
               sum_total <- rowSums(exp_mtx)
 
@@ -317,7 +317,7 @@ random.cellPooling.dev.yiyi <- function(dataset, n_cells= 10, assay_name="RNA", 
     }
   }
   #Create Seurat object
-  row.names(pseudo_cell_mtx) <- dataset[[assay_name]]@counts@Dimnames[[1]]
+  row.names(pseudo_cell_mtx) <- dataset[[assay_name]]$counts@Dimnames[[1]]
   colnames(pseudo_cell_mtx) <- meta_data
   pseudo_cell_seurat <- CreateSeuratObject(counts = pseudo_cell_mtx)
   pseudo_cell_seurat$group_id <- group_id

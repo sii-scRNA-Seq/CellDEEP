@@ -104,7 +104,7 @@ FindMarker.CellDEEP <- function(object,
                               ...)
     }else if(pool_way == "random"){
       #Pooling the cell
-      pooled.object <- random.cellPooling.dev.yiyi(object, readcounts = readcounts, n_cells= n_cells, assay_name = assay, cell_cutoff = cell_cutoff )
+      pooled.object <- random.cellPooling.dev.yiyi(object, readcounts = readcounts, n_cells= n_cells, assay_name = assay )
 
       print("FindMarker running.....")
 
