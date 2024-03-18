@@ -38,7 +38,7 @@
 
 cellPooling.kmean.dev.yiyi <- function(dataset, n_cells= 10, nstart=100, assay_name="RNA", readcounts = "mean", cell_cutoff = 25){
 
-  pseudo_cell_mtx <- matrix(, nrow=length(dataset[[assay_name]]$counts@Dimnames[[1]]), ncol=0)
+  pseudo_cell_mtx <- matrix(, nrow=length(dataset[[assay_name]]@counts@Dimnames[[1]]), ncol=0)
 
   #Here: filter cluster(after all splitting) whose cell number < 25
   meta_data = c()
@@ -219,7 +219,7 @@ cellPooling.kmean.dev.yiyi <- function(dataset, n_cells= 10, nstart=100, assay_n
 #'
 #' @examples
 random.cellPooling.dev.yiyi <- function(dataset, n_cells= 10, assay_name="RNA", readcounts = "mean"){
-  pseudo_cell_mtx <- matrix(, nrow=length(dataset[[assay_name]]$counts@Dimnames[[1]]), ncol=0)
+  pseudo_cell_mtx <- matrix(, nrow=length(dataset[[assay_name]]@counts@Dimnames[[1]]), ncol=0)
 
   meta_data = c()
   group_id = c()
