@@ -17,13 +17,20 @@
 #' @export
 #'
 #' @examples
-return.DE <- function(dataset, test.use = "wilcox", DE.ident.1, DE.ident.2, DE.group, assay="RNA", p_cutoff = 0.05) {
-  markers <- Seurat::FindMarkers(dataset, ident.1 = DE.ident.1, ident.2 = DE.ident.2, group.by = DE.group, test.use = test.use)
-  #DE <- rownames(markers[markers$p_val_adj<0.05,])
-  DE <- rownames(subset(markers, p_val_adj < p_cutoff, na.rm = T))
-  print(length(DE))
-  print(head(DE))
-  return(DE)
+return.DE <- function(dataset, test.use = "wilcox", DE.ident.1, DE.ident.2, DE.group, assay="RNA", p_cutoff = 0.05, name.only = TRUE) {
+  if(name.only == TRUE){
+    markers <- Seurat::FindMarkers(dataset, ident.1 = DE.ident.1, ident.2 = DE.ident.2, group.by = DE.group, test.use = test.use)
+    #DE <- rownames(markers[markers$p_val_adj<0.05,])
+    DE <- rownames(subset(markers, p_val_adj < p_cutoff, na.rm = T))
+    print(length(DE))
+    print(head(DE))
+    return(DE)
+  }else if(name.only == FALSE){
+    markers <- Seurat::FindMarkers(dataset, ident.1 = DE.ident.1, ident.2 = DE.ident.2, group.by = DE.group, test.use = test.use)
+    markers <- subset(markers, p_val_adj < p_cutoff, na.rm = T)
+    return(markers)
+  }
+
 }
 
 ##########This function running FindMarker with Pooling#####
@@ -60,6 +67,7 @@ FindMarker.CellDEEP <- function(object,
                        assay = "RNA",
                        cell_cutoff = 25,
                        pool_way = "kmean",
+                       name.only = TRUE,
                        ...
                        ){
 
@@ -71,6 +79,7 @@ FindMarker.CellDEEP <- function(object,
                              DE.group = group.by,
                              assay = assay,
                              test.use = test.use,
+                            name.only = name.only,
                              ...)
   }else #When pool = TRUE, run CellDEEP progress
     {
@@ -101,6 +110,7 @@ FindMarker.CellDEEP <- function(object,
                               DE.ident.2 = ident.2,
                               DE.group = group.by,
                               test.use = test.use,
+                              name.only = name.only,
                               ...)
     }else if(pool_way == "random"){
       #Pooling the cell
@@ -126,6 +136,7 @@ FindMarker.CellDEEP <- function(object,
                               DE.ident.2 = ident.2,
                               DE.group = group.by,
                               test.use = test.use,
+                              name.only = name.only,
                               ...)
     }else{
       print("Wrong pooling way, kmean or random")
