@@ -273,6 +273,8 @@ random.cellPooling.dev.yiyi <- function(dataset, n_cells= 10, assay_name="RNA", 
 
             real.cells <- rownames(sample_subset@meta.data) #get cell rowname to pool
             cluster_counter = 0
+            if (length(real.cells) >=n_cells) {
+
 
             while (length(real.cells) >=n_cells){  #when there are more than n cells in the cluster
               pool<- sample(real.cells, n_cells, replace = FALSE) #randomly pool n cells from the subset
@@ -315,6 +317,43 @@ random.cellPooling.dev.yiyi <- function(dataset, n_cells= 10, assay_name="RNA", 
               # print(head(rtable.cells))
               rtable <- rbind(rtable,rtable.cells)
               #print("DONE a kmeans")
+            }
+            }else{ #when cell number is less than cell number we want to pool
+              #create pseudo cell directly
+              # object: cluster_subset
+              # cell name inside one sample: real.cells
+              cell_id_to_pool <- real.cells
+              pool <- cluster_subset[[assay_name]]$counts[,real.cells] #get the n cells readcounts(before was only names)
+              exp_mtx <- as.matrix(pool) #make a matrix and the mean
+              sum_total <- rowSums(exp_mtx)
+
+              if (readcounts == "mean") {
+                mean_total <- round(sum_total/n_cells)
+                mean_total <- data.frame(mean_total) #make a dataframe
+                pseudo_cell_mtx <- cbind(pseudo_cell_mtx, mean_total$mean_total)
+              } else if (readcounts == "sum") {
+                sum_total <- data.frame(sum_total)
+                pseudo_cell_mtx <- cbind(pseudo_cell_mtx, sum_total$sum_total)
+              } else {
+                stop("Error: readcounts parameter not known")
+              }
+
+              #increase counters
+              counter = counter + 1
+              cluster_counter= cluster_counter+1
+
+              # print("here is cluster counter:")
+              # print(cluster_counter)
+
+              meta_data <- append(meta_data, paste(y,"_",counter)) # New cell name
+              sample_id <- append(sample_id, paste(y))
+              group_id <- append(group_id, paste(x))
+              cluster_id <- append(cluster_id,paste(z))
+
+              rtable.cells <- data.frame(row.names = cell_id_to_pool, pooled_cells=rep(paste(y,cluster_counter,sep = "_"), length(cell_id_to_pool)))
+              # print(head(rtable.cells))
+              rtable <- rbind(rtable,rtable.cells)
+
             }
             }
           }
