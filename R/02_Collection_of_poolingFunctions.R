@@ -156,6 +156,7 @@ cellPooling.kmean.dev.yiyi <- function(dataset, n_cells= 10, nstart=100, assay_n
                 counter = counter + 1
                 #cluster_counter= cluster_counter+1
                 meta_data <- append(meta_data, paste(y,"_",counter)) # New cell name
+
                 sample_id <- append(sample_id, paste(y))
                 group_id <- append(group_id, paste(x))
                 cluster_id <- append(cluster_id,paste(z))
@@ -196,6 +197,10 @@ cellPooling.kmean.dev.yiyi <- function(dataset, n_cells= 10, nstart=100, assay_n
 
   dataset <- AddMetaData(dataset, metadata = ktable, col.name = "Pooled_kmeans_cells")
   Idents(dataset) <- "Pooled_kmeans_cells"
+
+  print("sample_id before dimplot:")
+  print(table(dataset$sample_id))
+
   print(Seurat::DimPlot(dataset, split.by = "sample_id",ncol = 4) + NoLegend())
 
   table(pseudo_cell_seurat@meta.data$sample_id)
@@ -301,6 +306,7 @@ random.cellPooling.dev.yiyi <- function(dataset, n_cells= 10, assay_name="RNA", 
               # print(cluster_counter)
 
               meta_data <- append(meta_data, paste(y,"_",counter)) # New cell name
+
               sample_id <- append(sample_id, paste(y))
               group_id <- append(group_id, paste(x))
               cluster_id <- append(cluster_id,paste(z))
@@ -327,6 +333,11 @@ random.cellPooling.dev.yiyi <- function(dataset, n_cells= 10, assay_name="RNA", 
   #split UMAP
   dataset <- AddMetaData(dataset, metadata = rtable, col.name = "Pooled_randomly_cells")
   Idents(dataset) <- "Pooled_randomly_cells"
+
+  print("sample_id before dimplot:")
+  print(table(dataset$sample_id))
+  print("dataset object:")
+  print(colnames(dataset@meta.data))
   print(Seurat::DimPlot(dataset, split.by = "sample_id",ncol = 4))
 
   table(pseudo_cell_seurat@meta.data$sample_id)
