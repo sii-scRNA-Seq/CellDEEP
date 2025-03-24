@@ -11,8 +11,7 @@ return.DE(
   DE.ident.2,
   DE.group,
   assay = "RNA",
-  p_cutoff = 0.05,
-  name.only = TRUE
+  p_cutoff = 0.05
 )
 }
 \arguments{

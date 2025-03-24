@@ -37,8 +37,9 @@
 
 
 cellPooling.kmean.dev.yiyi <- function(dataset, n_cells= 10, nstart=100, assay_name="RNA", readcounts = "mean", cell_cutoff = 25){
-
-  pseudo_cell_mtx <- matrix(, nrow=length(dataset[[assay_name]]@counts@Dimnames[[1]]), ncol=0)
+  print(dataset)
+  print(assay_name)
+  pseudo_cell_mtx <- matrix(, nrow=length(dataset[[assay_name]]$counts@Dimnames[[1]]), ncol=0)
 
   #Here: filter cluster(after all splitting) whose cell number < 25
   meta_data = c()
@@ -46,6 +47,7 @@ cellPooling.kmean.dev.yiyi <- function(dataset, n_cells= 10, nstart=100, assay_n
   cluster_id = c()
   sample_id = c()
   ktable = data.frame(row.names = rownames(dataset))
+  drop_out_counter = 0
 
   print("Pooling...")
   for (x in levels(as.factor(dataset$group_id))){ # This is important
@@ -117,59 +119,62 @@ cellPooling.kmean.dev.yiyi <- function(dataset, n_cells= 10, nstart=100, assay_n
             #use k-mean clustering to cluster c3
             for(h in levels(as.factor(sample_subset@meta.data$kmeans))){
 
-              # print("here is h:")
-              # print(h)
-              # print("here is subsample:")
-              # print(sample_subset)
               k.clusters <- subset(sample_subset,subset=kmeans==h)
 
               #pool cells
               cells <- rownames(k.clusters@meta.data) #get cell rownames for kcluster
 
-              # print("here are cell list!")
-              # print(cells)
-              # print("cell list end!!")
-              # print(length(cells))
 
               cell_number <- length(cells) #get cell number that would be pooled
-              pool <- k.clusters[[assay_name]]@counts[,cells] #get the cell information inside kcluster
-              exp_mtx <- as.matrix(pool) #make a matrix of cell information inside kcluster
-              sum_total <- rowSums(exp_mtx)
 
-              if (readcounts == "mean") {
-                #mean_total <- round(sum_total/n_cells)
-                mean_total <- round(sum_total/cell_number)
-                mean_total <- data.frame(mean_total) #make a dataframe
-                pseudo_cell_mtx <- cbind(pseudo_cell_mtx, mean_total$mean_total)
-              } else if (readcounts == "sum") {
-                sum_total <- data.frame(sum_total)
-                pseudo_cell_mtx <- cbind(pseudo_cell_mtx, sum_total$sum_total)
-              } else if (readcounts == "10X") {
-                #mean_total <- round(10*(sum_total/n_cells))
-                mean_total <- round(10*(sum_total/cell_number))
-                mean_total <- data.frame(mean_total) #make a dataframe
-                pseudo_cell_mtx <- cbind(pseudo_cell_mtx, mean_total$mean_total)
+              if(cell_number > 1){
+
+                pool <- k.clusters[[assay_name]]$counts[,cells] #get the cell information inside kcluster
+                exp_mtx <- as.matrix(pool)#make a matrix of cell information inside kcluster
+                sum_total <- rowSums(exp_mtx)
+
+
+                if (readcounts == "mean") {
+                  #mean_total <- round(sum_total/n_cells)
+                  mean_total <- round(sum_total/cell_number)
+                  mean_total <- data.frame(mean_total) #make a dataframe
+                  pseudo_cell_mtx <- cbind(pseudo_cell_mtx, mean_total$mean_total)
+                } else if (readcounts == "sum") {
+                  sum_total <- data.frame(sum_total)
+                  pseudo_cell_mtx <- cbind(pseudo_cell_mtx, sum_total$sum_total)
+                } else if (readcounts == "10X") {
+                  #mean_total <- round(10*(sum_total/n_cells))
+                  mean_total <- round(10*(sum_total/cell_number))
+                  mean_total <- data.frame(mean_total) #make a dataframe
+                  pseudo_cell_mtx <- cbind(pseudo_cell_mtx, mean_total$mean_total)
+                }
+                else {
+                  stop("Error: readcounts parameter not known")
+                }
+
+                #increase counters
+                counter = counter + 1
+                #cluster_counter= cluster_counter+1
+                meta_data <- append(meta_data, paste(y,"_",counter)) # New cell name
+
+                sample_id <- append(sample_id, paste(y))
+                group_id <- append(group_id, paste(x))
+                cluster_id <- append(cluster_id,paste(z))
+
+                #print("cells:")
+                #print(cells)
+
+                ktable.cells <- data.frame(row.names = cells, pooled_cells=rep(paste(y,h,sep = "_"), length(cells)))
+                #print("here is ktable.cells")
+                #print(ktable.cells)
+                ktable <- rbind(ktable,ktable.cells)
+                #print("DONE a kmeans")
+
+              }else{
+                drop_out_counter = drop_out_counter + 1
               }
-              else {
-                stop("Error: readcounts parameter not known")
-              }
 
-              #increase counters
-              counter = counter + 1
-              #cluster_counter= cluster_counter+1
-              meta_data <- append(meta_data, paste(y,"_",counter)) # New cell name
-              sample_id <- append(sample_id, paste(y))
-              group_id <- append(group_id, paste(x))
-              cluster_id <- append(cluster_id,paste(z))
 
-              #print("cells:")
-              #print(cells)
-
-              ktable.cells <- data.frame(row.names = cells, pooled_cells=rep(paste(y,h,sep = "_"), length(cells)))
-              #print("here is ktable.cells")
-              #print(ktable.cells)
-              ktable <- rbind(ktable,ktable.cells)
-              #print("DONE a kmeans")
             }
             }
           }
@@ -178,7 +183,7 @@ cellPooling.kmean.dev.yiyi <- function(dataset, n_cells= 10, nstart=100, assay_n
     }
   }
   #Create Seurat object
-  row.names(pseudo_cell_mtx) <- dataset[[assay_name]]@counts@Dimnames[[1]]
+  row.names(pseudo_cell_mtx) <- dataset[[assay_name]]$counts@Dimnames[[1]]
   colnames(pseudo_cell_mtx) <- meta_data
   pseudo_cell_seurat <- Seurat::CreateSeuratObject(counts = pseudo_cell_mtx)
   pseudo_cell_seurat$group_id <- group_id
@@ -192,9 +197,16 @@ cellPooling.kmean.dev.yiyi <- function(dataset, n_cells= 10, nstart=100, assay_n
 
   dataset <- AddMetaData(dataset, metadata = ktable, col.name = "Pooled_kmeans_cells")
   Idents(dataset) <- "Pooled_kmeans_cells"
+
+  print("sample_id before dimplot:")
+  print(table(dataset$sample_id))
+
   print(Seurat::DimPlot(dataset, split.by = "sample_id",ncol = 4) + NoLegend())
 
   table(pseudo_cell_seurat@meta.data$sample_id)
+
+  print("Drop out cell number during kmean pooling is:")
+  print(drop_out_counter)
 
   #return(ktable)
   #return(dataset)
@@ -219,7 +231,7 @@ cellPooling.kmean.dev.yiyi <- function(dataset, n_cells= 10, nstart=100, assay_n
 #'
 #' @examples
 random.cellPooling.dev.yiyi <- function(dataset, n_cells= 10, assay_name="RNA", readcounts = "mean"){
-  pseudo_cell_mtx <- matrix(, nrow=length(dataset[[assay_name]]@counts@Dimnames[[1]]), ncol=0)
+  pseudo_cell_mtx <- matrix(, nrow=length(dataset[[assay_name]]$counts@Dimnames[[1]]), ncol=0)
 
   meta_data = c()
   group_id = c()
@@ -261,6 +273,8 @@ random.cellPooling.dev.yiyi <- function(dataset, n_cells= 10, assay_name="RNA", 
 
             real.cells <- rownames(sample_subset@meta.data) #get cell rowname to pool
             cluster_counter = 0
+            if (length(real.cells) >=n_cells) {
+
 
             while (length(real.cells) >=n_cells){  #when there are more than n cells in the cluster
               pool<- sample(real.cells, n_cells, replace = FALSE) #randomly pool n cells from the subset
@@ -271,7 +285,45 @@ random.cellPooling.dev.yiyi <- function(dataset, n_cells= 10, assay_name="RNA", 
               # print("cell list end!!")
 
               real.cells <- subset(real.cells, !(real.cells %in% pool)) #delete those n cells from the subset
-              pool <- cluster_subset[[assay_name]]@counts[,pool] #get the n cells readcounts(before was only names)
+              pool <- cluster_subset[[assay_name]]$counts[,pool] #get the n cells readcounts(before was only names)
+              exp_mtx <- as.matrix(pool) #make a matrix and the mean
+              sum_total <- rowSums(exp_mtx)
+
+              if (readcounts == "mean") {
+                mean_total <- round(sum_total/n_cells)
+                mean_total <- data.frame(mean_total) #make a dataframe
+                pseudo_cell_mtx <- cbind(pseudo_cell_mtx, mean_total$mean_total)
+              } else if (readcounts == "sum") {
+                sum_total <- data.frame(sum_total)
+                pseudo_cell_mtx <- cbind(pseudo_cell_mtx, sum_total$sum_total)
+              } else {
+                stop("Error: readcounts parameter not known")
+              }
+
+              #increase counters
+              counter = counter + 1
+              cluster_counter= cluster_counter+1
+
+              # print("here is cluster counter:")
+              # print(cluster_counter)
+
+              meta_data <- append(meta_data, paste(y,"_",counter)) # New cell name
+
+              sample_id <- append(sample_id, paste(y))
+              group_id <- append(group_id, paste(x))
+              cluster_id <- append(cluster_id,paste(z))
+
+              rtable.cells <- data.frame(row.names = cell_id_to_pool, pooled_cells=rep(paste(y,cluster_counter,sep = "_"), length(cell_id_to_pool)))
+              # print(head(rtable.cells))
+              rtable <- rbind(rtable,rtable.cells)
+              #print("DONE a kmeans")
+            }
+            }else{ #when cell number is less than cell number we want to pool
+              #create pseudo cell directly
+              # object: cluster_subset
+              # cell name inside one sample: real.cells
+              cell_id_to_pool <- real.cells
+              pool <- cluster_subset[[assay_name]]$counts[,real.cells] #get the n cells readcounts(before was only names)
               exp_mtx <- as.matrix(pool) #make a matrix and the mean
               sum_total <- rowSums(exp_mtx)
 
@@ -301,7 +353,7 @@ random.cellPooling.dev.yiyi <- function(dataset, n_cells= 10, assay_name="RNA", 
               rtable.cells <- data.frame(row.names = cell_id_to_pool, pooled_cells=rep(paste(y,cluster_counter,sep = "_"), length(cell_id_to_pool)))
               # print(head(rtable.cells))
               rtable <- rbind(rtable,rtable.cells)
-              #print("DONE a kmeans")
+
             }
             }
           }
@@ -310,7 +362,7 @@ random.cellPooling.dev.yiyi <- function(dataset, n_cells= 10, assay_name="RNA", 
     }
   }
   #Create Seurat object
-  row.names(pseudo_cell_mtx) <- dataset[[assay_name]]@counts@Dimnames[[1]]
+  row.names(pseudo_cell_mtx) <- dataset[[assay_name]]$counts@Dimnames[[1]]
   colnames(pseudo_cell_mtx) <- meta_data
   pseudo_cell_seurat <- CreateSeuratObject(counts = pseudo_cell_mtx)
   pseudo_cell_seurat$group_id <- group_id
@@ -320,6 +372,11 @@ random.cellPooling.dev.yiyi <- function(dataset, n_cells= 10, assay_name="RNA", 
   #split UMAP
   dataset <- AddMetaData(dataset, metadata = rtable, col.name = "Pooled_randomly_cells")
   Idents(dataset) <- "Pooled_randomly_cells"
+
+  print("sample_id before dimplot:")
+  print(table(dataset$sample_id))
+  print("dataset object:")
+  print(colnames(dataset@meta.data))
   print(Seurat::DimPlot(dataset, split.by = "sample_id",ncol = 4))
 
   table(pseudo_cell_seurat@meta.data$sample_id)

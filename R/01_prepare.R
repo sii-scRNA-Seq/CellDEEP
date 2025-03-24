@@ -160,8 +160,6 @@ prepare_data <- function(obj, assay = "RNA",
     Original.Seurat.test@meta.data <- Original.Seurat@meta.data
     Original.Seurat.test@reductions <- Original.Seurat@reductions
     Original.Seurat <- Original.Seurat.test
-  }else{
-    DefaultAssay(Original.Seurat) <- assay
   }
 
 

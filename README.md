@@ -26,7 +26,21 @@ Before using, don’t forget library it:
 
 ``` r
 library(CellDEEP)
-
+library(Seurat)
+#> Loading required package: SeuratObject
+#> Loading required package: sp
+#> 'SeuratObject' was built under R 4.3.0 but the current version is
+#> 4.3.2; it is recomended that you reinstall 'SeuratObject' as the ABI
+#> for R may have changed
+#> 'SeuratObject' was built with package 'Matrix' 1.6.3 but the current
+#> version is 1.6.5; it is recomended that you reinstall 'SeuratObject' as
+#> the ABI for 'Matrix' may have changed
+#> 
+#> Attaching package: 'SeuratObject'
+#> The following object is masked from 'package:base':
+#> 
+#>     intersect
+library(SeuratObject)
 library(devtools)
 #> Loading required package: usethis
 load_all()
@@ -45,7 +59,7 @@ pdc <- prepare_data(pDC, sample_id = "sample_id", group_id = "Worst_Clinical_Sta
 #K-mean pooling:
 de.test <- FindMarker.CellDEEP(pdc, Pool = TRUE, ident.1 = "Healthy", ident.2 = "Severe", group.by = "group_id", n_cells = 6, cell_cutoff = 10, assay = "RNA", pool_way = "kmean")
 #Randomly pooling:
-de.test <- FindMarker.CellDEEP(pdc, Pool = TRUE, ident.1 = "Healthy", ident.2 = "Severe", group.by = "group_id", n_cells = 6, assay = "RNA", pool_way = "random")
+de.test <- FindMarker.CellDEEP(pdc, Pool = TRUE, ident.1 = "Healthy", ident.2 = "Severe", group.by = "group_id", n_cells = 10000, assay = "RNA", pool_way = "random")
 ```
 
 You’ll still need to render `README.Rmd` regularly, to keep `README.md`
