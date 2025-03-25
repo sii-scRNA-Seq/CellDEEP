@@ -37,10 +37,6 @@ Before using, don't forget library it:
 
 ```{r example}
 library(CellDEEP)
-library(Seurat)
-library(SeuratObject)
-library(devtools)
-load_all()
 ```
 
 To quickly run CellDEEP, just need to prepare the data, then run `FindMarker.CellDEEP`:
@@ -51,11 +47,16 @@ To quickly run CellDEEP, just need to prepare the data, then run `FindMarker.Cel
 
 pdc <- prepare_data(pDC, sample_id = "sample_id", group_id = "Worst_Clinical_Status", cluster_id = "initial_clustering", assay = "covid")
 
-#K-mean pooling:
-de.test <- FindMarker.CellDEEP(pdc, Pool = TRUE, ident.1 = "Healthy", ident.2 = "Severe", group.by = "group_id", n_cells = 6, cell_cutoff = 10, assay = "RNA", pool_way = "kmean")
 #Randomly pooling:
-de.test <- FindMarker.CellDEEP(pdc, Pool = TRUE, ident.1 = "Healthy", ident.2 = "Severe", group.by = "group_id", n_cells = 10000, assay = "RNA", pool_way = "random")
+de.test <- FindMarker.CellDEEP(pdc, Pool = TRUE, ident.1 = "Healthy", ident.2 = "Severe", group.by = "group_id", n_cells = 2, assay = "RNA", pool_way = "random", cell_cutoff = 1)
 ```
+There is an example of Kmean clustering:
+```{r}
+#K-mean pooling:
+de.test <- FindMarker.CellDEEP(pdc, Pool = TRUE, ident.1 = "Healthy", ident.2 = "Severe", group.by = "group_id", n_cells = 6, cell_cutoff = 1, assay = "RNA", pool_way = "kmean")
+```
+
+It won't work as sample data has too limited cells to get sufficient Kmean clustering. Try it on a bigger data!
 
 You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date. `devtools::build_readme()` is handy for this.
 
