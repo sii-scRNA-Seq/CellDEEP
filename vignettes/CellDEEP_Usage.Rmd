@@ -1,0 +1,21 @@
+---
+title: "CellDEEP_Usage"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{CellDEEP_Usage}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(CellDEEP)
+```
+
+This is package is aimed for 
