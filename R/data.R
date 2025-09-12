@@ -1,7 +1,8 @@
 #' Test pDC Data
 #'
 #' A test dataset containing a Seurat object of 100 cells and 24,929 features.
-#' This is a synthetic or example dataset representing plasmacytoid dendritic cells.
+#' This is a synthetic or example dataset representing plasmacytoid
+#' dendritic cells.
 #'
 #' @format A Seurat object with the following structure:
 #' \describe{

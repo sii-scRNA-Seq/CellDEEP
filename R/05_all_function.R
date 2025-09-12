@@ -2,7 +2,8 @@
 #'
 #' @rdname Subset.seurat.object
 #'
-#' @description This function take a seurat object as input, and subset it as user input.
+#' @description This function take a seurat object as input, and subset it as
+#' user input.
 #'
 #' @param Seurat.object A Seurat object user want to subset
 #' @param Ident.to.subset The ident to subset, eg: cluster_id
@@ -15,30 +16,37 @@
 #' @export
 #'
 #' @examples
-Subset.seurat.object <- function(Seurat.object, Ident.to.subset, Specific.Idents.to.subset) {
-  Moment.Seurat.object = Seurat.object
+Subset.seurat.object <- function(
+    Seurat.object, Ident.to.subset, Specific.Idents.to.subset) {
+  Moment.Seurat.object <- Seurat.object
 
-  print(Moment.Seurat.object)
+  message(Moment.Seurat.object)
   for (i in 1:length(Ident.to.subset)) {
     Seurat::Idents(Moment.Seurat.object) <- Ident.to.subset[[i]]
-    Moment.Seurat.object <- subset(Moment.Seurat.object, idents= Specific.Idents.to.subset[[i]])
+    Moment.Seurat.object <- subset(
+      Moment.Seurat.object, idents= Specific.Idents.to.subset[[i]]
+    )
     Moment.Seurat.object <- Seurat::ScaleData(Moment.Seurat.object)
   }
-  print(Moment.Seurat.object)
+  message(Moment.Seurat.object)
   return(Moment.Seurat.object)
 }
 
 
-#' @title Adjust input data format, Normalize/Scale/UMAP if needed, make the object ready for further steps.
+#' @title Adjust input data format, Normalize/Scale/UMAP if needed, make the
+#' object ready for further steps.
 #'
 #' @rdname prepare_data
 #'
-#' @description This function adjust input data format to make it ready for further steps. Add "sample_id",
-#' "cluster_id" and "group_id". Can Normalize/Scale/RunUMAP if needed.
+#' @description This function adjust input data format to make it ready for
+#' further steps. Add "sample_id", "cluster_id" and "group_id". Can
+#' Normalize/Scale/RunUMAP if needed.
 #'
-#' @param obj A Seurat object, should have metadata for sample, cluster and group info.
-#' @param assay RNA as default. If assay = "covid", create a new seurat obejct based on RAW read counts of input
-#' data, and go with it.
+#' @param obj A Seurat object, should have metadata for sample, cluster and
+#' group info.
+#' @param assay RNA as default. If assay = "covid", create a new seurat object
+#' based on RAW read counts of input data, and go with it.
+#'
 #' @param sample_id The metadata has sample information.
 #' @param group_id The metadata has group information.
 #' @param cluster_id The metadata has cluster information.
@@ -47,7 +55,8 @@ Subset.seurat.object <- function(Seurat.object, Ident.to.subset, Specific.Idents
 #' @param Need.to.Scale If the object need scale or not
 #' @param Need.UMAP.generation If the object need generate an UMAP or not.
 #' @param Ground.truth Does this dataset have ground truth or not.
-#' @param Specific.Idents.to.subset If need subset, which element do you want to choose.
+#' @param Specific.Idents.to.subset If need subset, which element do you
+#' want to choose.
 #' @param file_path The file path to store ground truth
 #'
 #' @import Seurat
@@ -94,12 +103,16 @@ prepare_data <- function(obj, assay = "RNA",
   }
 
   if (is.null(Ident.to.subset) == TRUE) {
-    Subset.Seurat = Original.Seurat
+    Subset.Seurat <- Original.Seurat
   } else {
-    Subset.Seurat = Subset.seurat.object(Original.Seurat, Ident.to.subset,Specific.Idents.to.subset)
-    Subset.Seurat@meta.data[[group_id]] <- droplevels(as.factor(Subset.Seurat@meta.data[[group_id]]))
-    Subset.Seurat@meta.data[[cluster_id]] <- droplevels(as.factor(Subset.Seurat@meta.data[[cluster_id]]))
-    Subset.Seurat@meta.data[[sample_id]] <- droplevels(as.factor(Subset.Seurat@meta.data[[sample_id]]))
+    Subset.Seurat <- Subset.seurat.object(
+      Original.Seurat, Ident.to.subset,Specific.Idents.to.subset)
+    Subset.Seurat@meta.data[[group_id]] <- droplevels(
+      as.factor(Subset.Seurat@meta.data[[group_id]]))
+    Subset.Seurat@meta.data[[cluster_id]] <- droplevels(
+      as.factor(Subset.Seurat@meta.data[[cluster_id]]))
+    Subset.Seurat@meta.data[[sample_id]] <- droplevels(
+      as.factor(Subset.Seurat@meta.data[[sample_id]]))
   }
 
   table(Subset.Seurat@meta.data[[sample_id]])
@@ -108,12 +121,15 @@ prepare_data <- function(obj, assay = "RNA",
 
   if (Need.to.Norm_Transf == TRUE) {
     Subset.Seurat <- Seurat::NormalizeData(Subset.Seurat)
-    Subset.Seurat <- Seurat::FindVariableFeatures(Subset.Seurat, selection.method = "vst", nfeatures = 2000)
-    Subset.Seurat <- Seurat::ScaleData(Subset.Seurat, features = rownames(Subset.Seurat))
+    Subset.Seurat <- Seurat::FindVariableFeatures(
+      Subset.Seurat, selection.method = "vst", nfeatures = 2000)
+    Subset.Seurat <- Seurat::ScaleData(
+      Subset.Seurat, features = rownames(Subset.Seurat))
   }
 
   if (Need.to.Scale == TRUE) {
-    Subset.Seurat <- Seurat::ScaleData(Subset.Seurat, features = rownames(Subset.Seurat))
+    Subset.Seurat <- Seurat::ScaleData(
+      Subset.Seurat, features = rownames(Subset.Seurat))
   }
 
   if (Need.UMAP.generation == TRUE) {
@@ -134,28 +150,32 @@ prepare_data <- function(obj, assay = "RNA",
 
   rm(Original.Seurat) #You don't need it and we save memory
 
+
   Subset.Seurat@meta.data[["group_id"]] <- Subset.Seurat@meta.data[[group_id]]
   Subset.Seurat@meta.data[["sample_id"]] <- Subset.Seurat@meta.data[[sample_id]]
   Subset.Seurat@meta.data[["cluster_id"]] <- Subset.Seurat@meta.data[[cluster_id]]
 
   # drop extra levels in Subset.Seurat object
-  Subset.Seurat@meta.data[["group_id"]] <- droplevels(as.factor(Subset.Seurat@meta.data[["group_id"]]))
-  Subset.Seurat@meta.data[["cluster_id"]] <- droplevels(as.factor(Subset.Seurat@meta.data[["cluster_id"]]))
-  Subset.Seurat@meta.data[["sample_id"]] <- droplevels(as.factor(Subset.Seurat@meta.data[["sample_id"]]))
+  for (column in c("group_id", "cluster_id", "sample_id")) {
+    Subset.Seurat@meta.data[[column]] <- droplevels(
+      as.factor(Subset.Seurat@meta.data[[column]]))
+  }
 
   #if the object contains ground.truth, get it
   if (exists("Ground.truth")==TRUE) {
     if (Ground.truth==TRUE){
-      if (is.null(Subset.Seurat@misc$muscat_ground_truth)==FALSE) { #muscat ground truth
-        Ground.truth$type="Muscat"
-        Ground.truth$genes=Subset.Seurat@misc$muscat_ground_truth
+      #muscat ground truth
+      if (is.null(Subset.Seurat@misc$muscat_ground_truth)==FALSE) {
+        Ground.truth$type <- "Muscat"
+        Ground.truth$genes <- Subset.Seurat@misc$muscat_ground_truth
         write("Ground Truth:",file_path)
         write(names(table(Ground.truth$genes$category)),file_path, append = TRUE, sep = "\t", ncolumns = 6)
         write(table(Ground.truth$genes$category),file_path, append = TRUE, sep = "\t", ncolumns = 6)
         write("\n",file_path, append = TRUE)
-      } else if (is.null(Subset.Seurat@misc$DE.genes)==FALSE) { #other DE.genes as ground truth
-        Ground.truth$type="Other"
-        Ground.truth$genes=Subset.Seurat@misc$DE.genes
+      } else if (is.null(Subset.Seurat@misc$DE.genes)==FALSE) {
+        #other DE.genes as ground truth
+        Ground.truth$type <- "Other"
+        Ground.truth$genes <- Subset.Seurat@misc$DE.genes
         write("Ground Truth:",file_path)
         write(length(Subset.Seurat@misc$DE.genes),file_path, append = TRUE)
         write("\n",file_path, append = TRUE)
@@ -179,10 +199,15 @@ prepare_data <- function(obj, assay = "RNA",
 #'
 #' @param dataset A Seurat object
 #' @param n_cells number of cells to pool together
-#' @param nstart the nstart in kmeans clustering, which represents how many sets to start with.
+#' @param nstart the nstart in kmeans clustering, which represents how many
+#' sets to start with.
 #' @param assay_name the assay to pool
-#' @param readcounts "mean" or "sum" or "10X". How to treat read counts when pool it. "mean" is mean the read counts and round; "sum" is sum; "10X" is the mean of read counts and 10 times it
-#' @param cell_cutoff Cell filtering number, After subset according to sample, group and cluster,if remaining cells lower than this number, these cells will be filtered out.Default 25.
+#' @param readcounts "mean" or "sum" or "10X". How to treat read counts when
+#' pool it. "mean" is mean the read counts and round; "sum" is sum; "10X" is
+#' the mean of read counts and 10 times it
+#' @param cell_cutoff Cell filtering number, After subset according to sample,
+#' group and cluster,if remaining cells lower than this number, these cells
+#' will be filtered out.Default 25.
 #'
 #' @import data.table
 #' @import Seurat
@@ -195,20 +220,22 @@ prepare_data <- function(obj, assay = "RNA",
 #' @export
 #'
 #' @examples
-cellPooling.kmean.dev.yiyi <- function(dataset, n_cells= 10, nstart=100, assay_name="RNA", readcounts = "mean", cell_cutoff = 25){
+cellPooling.kmean.dev.yiyi <- function(
+    dataset, n_cells= 10, nstart=100, assay_name="RNA",
+    readcounts = "mean", cell_cutoff = 25){
   print(dataset)
   print(assay_name)
   pseudo_cell_mtx <- matrix(, nrow=length(dataset[[assay_name]]$counts@Dimnames[[1]]), ncol=0)
 
   #Here: filter cluster(after all splitting) whose cell number < 25
-  meta_data = c()
-  group_id = c()
-  cluster_id = c()
-  sample_id = c()
-  ktable = data.frame(row.names = rownames(dataset))
-  drop_out_counter = 0
+  meta_data <- c()
+  group_id <- c()
+  cluster_id <- c()
+  sample_id <- c()
+  ktable <- data.frame(row.names = rownames(dataset))
+  drop_out_counter <- 0
 
-  print("Pooling...")
+  message("Pooling...")
   for (x in levels(as.factor(dataset$group_id))){ # This is important
     group_subset <- subset(dataset, subset= group_id ==x)
 
@@ -221,15 +248,15 @@ cellPooling.kmean.dev.yiyi <- function(dataset, n_cells= 10, nstart=100, assay_n
 
           #If the patient belong to the same group z
           if(y %in% as.factor(cluster_subset$sample_id)){
-            counter = 0
+            counter <- 0
             sample_subset <- subset(cluster_subset, subset=sample_id==y)
 
             #only keep going when cell number > 25
             if(as.integer(length(colnames(sample_subset))) > cell_cutoff){
 
-              k = as.integer(length(colnames(sample_subset))/n_cells)+1
+              k <- as.integer(length(colnames(sample_subset))/n_cells)+1
               if (k<2){
-                stop("Error: k < 2 for at least one sample. Change n_cells")
+                stop("k < 2 for at least one sample. Change n_cells")
               }
               sample_subset@meta.data$kmeans <- stats::kmeans(x = sample_subset@reductions[["pca"]]@cell.embeddings,centers = k, nstart = nstart)$cluster
 
@@ -238,15 +265,18 @@ cellPooling.kmean.dev.yiyi <- function(dataset, n_cells= 10, nstart=100, assay_n
                 k.clusters <- subset(sample_subset,subset=kmeans==h)
 
                 #pool cells
-                cells <- rownames(k.clusters@meta.data) #get cell rownames for kcluster
+                #get cell rownames for kcluster
+                cells <- rownames(k.clusters@meta.data)
 
-
-                cell_number <- length(cells) #get cell number that would be pooled
+                #get cell number that would be pooled
+                cell_number <- length(cells)
 
                 if(cell_number > 1){
 
-                  pool <- k.clusters[[assay_name]]$counts[,cells] #get the cell information inside kcluster
-                  exp_mtx <- as.matrix(pool)#make a matrix of cell information inside kcluster
+                  #get the cell information inside kcluster
+                  pool <- k.clusters[[assay_name]]$counts[,cells]
+                  #make a matrix of cell information inside kcluster
+                  exp_mtx <- as.matrix(pool)
                   sum_total <- rowSums(exp_mtx)
 
 
@@ -265,10 +295,11 @@ cellPooling.kmean.dev.yiyi <- function(dataset, n_cells= 10, nstart=100, assay_n
                     pseudo_cell_mtx <- cbind(pseudo_cell_mtx, mean_total$mean_total)
                   }
                   else {
-                    stop("Error: readcounts parameter not known")
+                    stop("readcounts parameter not known")
                   }
-                  counter = counter + 1
-                  meta_data <- append(meta_data, paste(y,"_",counter)) # New cell name
+                  counter <- counter + 1
+                  # New cell name
+                  meta_data <- append(meta_data, paste(y,"_",counter))
 
                   sample_id <- append(sample_id, paste(y))
                   group_id <- append(group_id, paste(x))
@@ -279,7 +310,7 @@ cellPooling.kmean.dev.yiyi <- function(dataset, n_cells= 10, nstart=100, assay_n
                   ktable <- rbind(ktable,ktable.cells)
 
                 }else{
-                  drop_out_counter = drop_out_counter + 1
+                  drop_out_counter <- drop_out_counter + 1
                 }
 
 
@@ -307,8 +338,7 @@ cellPooling.kmean.dev.yiyi <- function(dataset, n_cells= 10, nstart=100, assay_n
 
   table(pseudo_cell_seurat@meta.data$sample_id)
 
-  print("Drop out cell number during kmean pooling is:")
-  print(drop_out_counter)
+  message("Drop out cell number during kmean pooling is:",drop_out_counter)
 
   #return(ktable)
   #return(dataset)
@@ -325,8 +355,11 @@ cellPooling.kmean.dev.yiyi <- function(dataset, n_cells= 10, nstart=100, assay_n
 #' @param dataset A seurat object
 #' @param n_cells The number of cells to pool together.
 #' @param assay_name The assay to pool based_on
-#' @param readcounts "sum" or "mean". How to generate read counts when pooling cells together.
-#' @param cell_cutoff Cell filtering number, After subset according to sample, group and cluster,if remaining cells lower than this number, these cells will be filtered out.Default 25.
+#' @param readcounts "sum" or "mean". How to generate read counts when
+#' pooling cells together.
+#' @param cell_cutoff Cell filtering number, After subset according to
+#' sample, group and cluster,if remaining cells lower than this number,
+#' these cells will be filtered out.Default 25.
 #'
 #' @import data.table
 #' @import Seurat
@@ -340,16 +373,16 @@ cellPooling.kmean.dev.yiyi <- function(dataset, n_cells= 10, nstart=100, assay_n
 random.cellPooling.dev.yiyi <- function(dataset, n_cells= 10, assay_name="RNA", readcounts = "mean", cell_cutoff = 25){
   pseudo_cell_mtx <- matrix(, nrow=length(dataset[[assay_name]]$counts@Dimnames[[1]]), ncol=0)
 
-  meta_data = c()
-  group_id = c()
-  cluster_id = c()
-  sample_id = c()
-  rtable = data.frame(row.names = rownames(dataset))
+  meta_data <- c()
+  group_id <- c()
+  cluster_id <- c()
+  sample_id <- c()
+  rtable <- data.frame(row.names = rownames(dataset))
 
   print("Pooling...")
   for (x in levels(as.factor(dataset$group_id))){
     ##group, A and B, by ident()
-    print(x)
+    message(x)
     group_subset <- subset(dataset, subset= group_id ==x)
 
     #for each group...
@@ -361,47 +394,52 @@ random.cellPooling.dev.yiyi <- function(dataset, n_cells= 10, assay_name="RNA", 
 
         #For each sample/patient/replicate
         for(y in levels(as.factor(dataset$sample_id))){
-          counter = 0
+          counter <- 0
 
           #If the patient belong to the same group z
           if(y %in% as.factor(cluster_subset$sample_id)){
             #pool cells
-            sample_subset <- subset(cluster_subset, subset= sample_id ==y)  # subsets according to the sample/replicate
+            # subsets according to the sample/replicate
+            sample_subset <- subset(cluster_subset, subset= sample_id ==y)
 
             if(as.integer(length(colnames(sample_subset))) > cell_cutoff){
-
-              real.cells <- rownames(sample_subset@meta.data) #get cell rowname to pool
-              cluster_counter = 0
+              #get cell rowname to pool
+              real.cells <- rownames(sample_subset@meta.data)
+              cluster_counter <- 0
               if (length(real.cells) >=n_cells) {
 
-
-                while (length(real.cells) >=n_cells){  #when there are more than n cells in the cluster
-                  pool<- sample(real.cells, n_cells, replace = FALSE) #randomly pool n cells from the subset
+                #when there are more than n cells in the cluster
+                while (length(real.cells) >=n_cells){
+                  #randomly pool n cells from the subset
+                  pool<- sample(real.cells, n_cells, replace = FALSE)
 
                   cell_id_to_pool <- pool
 
-                  real.cells <- subset(real.cells, !(real.cells %in% pool)) #delete those n cells from the subset
-                  pool <- cluster_subset[[assay_name]]$counts[,pool] #get the n cells readcounts(before was only names)
-                  exp_mtx <- as.matrix(pool) #make a matrix and the mean
+                  #delete those n cells from the subset
+                  real.cells <- subset(real.cells, !(real.cells %in% pool))
+                  #get the n cells readcounts(before was only names)
+                  pool <- cluster_subset[[assay_name]]$counts[,pool]
+                  #make a matrix and the mean
+                  exp_mtx <- as.matrix(pool)
                   sum_total <- rowSums(exp_mtx)
 
                   if (readcounts == "mean") {
                     mean_total <- round(sum_total/n_cells)
-                    mean_total <- data.frame(mean_total) #make a dataframe
+                    mean_total <- data.frame(mean_total)
                     pseudo_cell_mtx <- cbind(pseudo_cell_mtx, mean_total$mean_total)
                   } else if (readcounts == "sum") {
                     sum_total <- data.frame(sum_total)
                     pseudo_cell_mtx <- cbind(pseudo_cell_mtx, sum_total$sum_total)
                   } else {
-                    stop("Error: readcounts parameter not known")
+                    stop("readcounts parameter not known")
                   }
 
                   #increase counters
-                  counter = counter + 1
-                  cluster_counter= cluster_counter+1
+                  counter <- counter + 1
+                  cluster_counter <- cluster_counter+1
 
-
-                  meta_data <- append(meta_data, paste(y,"_",counter)) # New cell name
+                  # New cell name
+                  meta_data <- append(meta_data, paste(y,"_",counter))
 
                   sample_id <- append(sample_id, paste(y))
                   group_id <- append(group_id, paste(x))
@@ -416,7 +454,8 @@ random.cellPooling.dev.yiyi <- function(dataset, n_cells= 10, assay_name="RNA", 
                 # object: cluster_subset
                 # cell name inside one sample: real.cells
                 cell_id_to_pool <- real.cells
-                pool <- cluster_subset[[assay_name]]$counts[,real.cells] #get the n cells readcounts(before was only names)
+                #get the n cells readcounts(before was only names)
+                pool <- cluster_subset[[assay_name]]$counts[,real.cells]
                 exp_mtx <- as.matrix(pool) #make a matrix and the mean
                 sum_total <- rowSums(exp_mtx)
 
@@ -428,14 +467,15 @@ random.cellPooling.dev.yiyi <- function(dataset, n_cells= 10, assay_name="RNA", 
                   sum_total <- data.frame(sum_total)
                   pseudo_cell_mtx <- cbind(pseudo_cell_mtx, sum_total$sum_total)
                 } else {
-                  stop("Error: readcounts parameter not known")
+                  stop("readcounts parameter not known")
                 }
 
                 #increase counters
-                counter = counter + 1
-                cluster_counter= cluster_counter+1
+                counter <- counter + 1
+                cluster_counter <- cluster_counter+1
 
-                meta_data <- append(meta_data, paste(y,"_",counter)) # New cell name
+                # New cell name
+                meta_data <- append(meta_data, paste(y,"_",counter))
                 sample_id <- append(sample_id, paste(y))
                 group_id <- append(group_id, paste(x))
                 cluster_id <- append(cluster_id,paste(z))
@@ -475,10 +515,12 @@ random.cellPooling.dev.yiyi <- function(dataset, n_cells= 10, assay_name="RNA", 
 
 
 #' Pseudobulk Function
-#' @description This function pseudobulk the input sce object, and run DE analysis as contrast indicate
+#' @description This function pseudobulk the input sce object, and run
+#' DE analysis as contrast indicate
 #'
 #' @param sce The SingleCellExperiment object want to be processed
-#' @param contrasts The contrast matrix used to indicate comparison user want to make
+#' @param contrasts The contrast matrix used to indicate comparison user
+#' want to make
 #' @param verbose Show the input comparison matrix or not
 #' @param ... Places for other further possible parameter
 #'
@@ -509,12 +551,14 @@ pseudobulk_dge_pool <- function(sce, contrasts, verbose= FALSE, ...) {
   sce@colData$group_id <- as.factor(make.names(sce@colData$group_id))
 
   if(length(unique(sce@colData$group_id)) != ngrp) {
-    stop('Duplicate group_id generated while making valid names.\nRename values in sce@colData$group_id to be valid names')
+    stop('Duplicate group_id generated while making valid names.\nRename",
+         "values in sce@colData$group_id to be valid names')
   }
 
   # Create one pseudobulk for each cluster_id. Each pseudobulk has counts
   # aggregrated within sample_id
-  pb <- aggregateData(sce, assay= "counts", fun= "sum", by= c("cluster_id", "sample_id"))
+  pb <- aggregateData(sce, assay= "counts", fun= "sum",
+                      by= c("cluster_id", "sample_id"))
   # add a matrix we need
 
 
@@ -525,9 +569,7 @@ pseudobulk_dge_pool <- function(sce, contrasts, verbose= FALSE, ...) {
   design <- design[match(samples, design$sample_id)]
 
   if(verbose) {
-    cat('Design:\n')
-    print(design)
-    cat('\n')
+    message('Design:\n', design, '\n')
   }
 
   # Prepare for DGE
@@ -536,16 +578,12 @@ pseudobulk_dge_pool <- function(sce, contrasts, verbose= FALSE, ...) {
   rownames(mm) <- design$sample_id
 
   if(verbose) {
-    cat('Model matrix:\n')
-    print(mm)
-    cat('\n')
+    message('Model matrix:\n', mm, '\n')
   }
 
   contrast_mat <- limma::makeContrasts(contrasts= contrasts, levels = mm)
   if(verbose) {
-    cat('Contrast matrix:\n')
-    print(contrast_mat)
-    cat('\n')
+    message('Contrast matrix:\n', contrast_mat, '\n')
   }
 
   # muscat requires `experiment_info` to be not NULL but I'm not sure it is
@@ -602,9 +640,9 @@ utils::globalVariables("metadata")
 #' @examples
 return.DE <- function(dataset, test.use = "wilcox", DE.ident.1, DE.ident.2, DE.group, assay="RNA", p_cutoff = 0.05) {
   markers <- Seurat::FindMarkers(dataset, ident.1 = DE.ident.1, ident.2 = DE.ident.2, group.by = DE.group, test.use = test.use)
-  DE <- rownames(subset(markers, markers$p_val_adj < p_cutoff, na.rm = T))
-  print(length(DE))
-  print(head(DE))
+  DE <- rownames(subset(markers, markers$p_val_adj < p_cutoff, na.rm = TRUE))
+  message(length(DE))
+  message(head(DE))
   return(DE)
 }
 
@@ -616,13 +654,20 @@ return.DE <- function(dataset, test.use = "wilcox", DE.ident.1, DE.ident.2, DE.g
 #' @param object The input seurat object (cells user want to pool)
 #' @param ident.1 The first ident to compare for DE
 #' @param ident.2 The second ident to compare for DE
-#' @param group.by The group comparison for DE (metadata name where the DE will be applied)
+#' @param group.by The group comparison for DE (metadata name where the DE
+#' will be applied)
 #' @param test.use The DE method to use
-#' @param Pool Pool cells or not, default TRUE, when user want to run DE withour any pooling set to FASLE
-#' @param readcounts The way to treat readcounts while pooling, options: "sum" and "mean" (For Kmean clustering pooling, one extra option "10X", which is multiple mean readcounts 10 times )
-#' @param n_cells How many cells to pool together, this parameter affects method performance, check paper for details. 10 as defatult.
+#' @param Pool Pool cells or not, default TRUE, when user want to run DE
+#' without any pooling set to FASLE
+#' @param readcounts The way to treat readcounts while pooling, options:
+#' "sum" and "mean" (For Kmean clustering pooling, one extra option "10X",
+#' which is multiple mean readcounts 10 times)
+#' @param n_cells How many cells to pool together, this parameter affects
+#' method performance, check paper for details. 10 as defatult.
 #' @param assay The assay to process. "RNA" as default.
-#' @param cell_cutoff Cell filtering number, After subset according to sample, group and cluster,if remaining cells lower than this number, these cells will be filtered out.Default 25.
+#' @param cell_cutoff Cell filtering number, After subset according to
+#' sample, group and cluster,if remaining cells lower than this number,
+#' these cells will be filtered out.Default 25.
 #' @param pool_way The pooling atrategy, Two option: "kmean" and "random".
 #' @param pvalue_cutoff The adjusted p-value cutoff for DE analysis.
 #' @param ... Places for other further possible parameter
@@ -695,14 +740,11 @@ FindMarker.CellDEEP <- function(object,
       #Pooling the cell
       pooled.object <- random.cellPooling.dev.yiyi(object, readcounts = readcounts, n_cells= n_cells, assay_name = assay, cell_cutoff = cell_cutoff )
 
-      print("FindMarker running.....")
+      message("FindMarker running.....")
 
-      print("1st ident is:")
-      print(ident.1)
-      print("2nd ident is:")
-      print(ident.2)
-      print("group by:")
-      print(group.by)
+      message("1st ident is:", ident.1)
+      message("2nd ident is:", ident.2)
+      message("group by:", group.by)
 
       pooled.object <- Seurat::NormalizeData(pooled.object)
       pooled.object <- Seurat::FindVariableFeatures(pooled.object, selection.method = "vst", nfeatures = 2000)
@@ -718,7 +760,7 @@ FindMarker.CellDEEP <- function(object,
                               p_cutoff = pvalue_cutoff,
                               ...)
     }else{
-      print("Wrong pooling way, kmean or random")
+      stop("Wrong pooling way, kmean or random")
     }
 
   }

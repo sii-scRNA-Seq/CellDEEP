@@ -5,8 +5,10 @@ Version: 0.1.0
 Authors@R: person("Yiyi", "Cheng", email = "2593244c@student.gla.ac.uk",role = c("aut", "cre"), comment = c(ORCID = "0009-0005-3329-6842"))
 Description: A package to pool cells together before running differentially expression(DE) analysis. Tell CellDEEP how many cells you want to pool together(which shall be determined by the overall cell number of data), then run DE analysis .
 License: MIT + file LICENSE
+URL: https://github.com/sii-scRNA-Seq/CellDEEP
+BugReports: https://github.com/sii-scRNA-Seq/CellDEEP/issues
 Encoding: UTF-8
-LazyData: true
+LazyData: false
 RoxygenNote: 7.3.2
 biocViews: 
 Imports: 
@@ -23,4 +25,4 @@ Suggests:
     rmarkdown
 VignetteBuilder: knitr
 Depends: 
-    R (>= 3.5)
+    R (>= 4.4)
