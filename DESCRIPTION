@@ -10,7 +10,7 @@ BugReports: https://github.com/sii-scRNA-Seq/CellDEEP/issues
 Encoding: UTF-8
 LazyData: false
 RoxygenNote: 7.3.2
-biocViews: 
+biocViews: Software, DifferentialExpression, Transcriptomics, SingleCell 
 Imports: 
   Seurat,
   tidyverse,
