@@ -21,10 +21,10 @@ Subset.seurat.object <- function(
   Moment.Seurat.object <- Seurat.object
 
   message(Moment.Seurat.object)
-  for (i in 1:length(Ident.to.subset)) {
-    Seurat::Idents(Moment.Seurat.object) <- Ident.to.subset[[i]]
+  for (id in Ident.to.subset) {
+    Seurat::Idents(Moment.Seurat.object) <- id
     Moment.Seurat.object <- subset(
-      Moment.Seurat.object, idents= Specific.Idents.to.subset[[i]]
+      Moment.Seurat.object, idents = id
     )
     Moment.Seurat.object <- Seurat::ScaleData(Moment.Seurat.object)
   }
@@ -136,9 +136,9 @@ prepare_data <- function(obj, assay = "RNA",
     Subset.Seurat <- Seurat::RunPCA(object = Subset.Seurat, npcs = 30)
     Seurat::ElbowPlot(object = Subset.Seurat, ndims  = 30)
     Seurat::DimPlot(Subset.Seurat, reduction = "pca")
-    Subset.Seurat <- Seurat::FindNeighbors(Subset.Seurat, dims = 1:20)
+    Subset.Seurat <- Seurat::FindNeighbors(Subset.Seurat, dims = seq_len(20))
     Subset.Seurat <- Seurat::FindClusters(Subset.Seurat,resolution = 0.1)
-    Subset.Seurat <- Seurat::RunUMAP(Subset.Seurat, dims = 1:20)
+    Subset.Seurat <- Seurat::RunUMAP(Subset.Seurat, dims = seq_len(20))
   }
 
   #Subset.Seurat <- subset(x = emma, subset = seurat_clusters == "2")
