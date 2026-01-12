@@ -23,7 +23,7 @@ CellDEEP.Kmean(
 \item{assay_name}{Character. The assay to pull counts from (default "RNA").}
 
 \item{readcounts}{Character. Aggregation method: "mean" (rounded average),
-"sum", "10X" (mean * 10), or "normalized.sum".}
+"sum", "10X" (mean * 10).}
 
 \item{cell_cutoff}{Integer. Minimum cells required in a sample-cluster group
 to perform pooling (default 25).}

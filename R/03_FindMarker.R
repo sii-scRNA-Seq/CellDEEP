@@ -20,6 +20,8 @@
 #' @param full_list Logical. If TRUE, overrides p-value filtering and returns all results.
 #' @param ... Extra parameters passed to \code{Seurat::FindMarkers}.
 #'
+#' @importFrom Seurat FindMarkers
+#'
 #' @return A character vector of gene names or a data.frame of markers depending on \code{name.only}.
 #'
 #' @export
@@ -29,7 +31,13 @@
 #' # genes <- return.DE(my_seurat, DE.ident.1 = "Control", DE.group = "condition")
 #'
 #' # Get full table of significant markers
-#' # marker_table <- return.DE(my_seurat, DE.ident.1 = "B_Cell", DE.group = "celltype", name.only = FALSE)
+#' # marker_table <- return.DE(
+#' #   my_seurat,
+#' #   DE.ident.1 = "B_Cell",
+#' #   DE.ident.2 = "T_Cell",
+#' #   DE.group = "celltype",
+#' #   name.only = FALSE
+#' # )
 return.DE <- function(
     dataset,
     test.use       = "wilcox",
@@ -61,8 +69,8 @@ return.DE <- function(
   if (isTRUE(full_list)) {
     if (isTRUE(name.only)) {
       DE <- rownames(markers)
-      print(length(DE))
-      print(head(DE))
+      message(length(DE))
+      message(head(DE))
       return(DE)
     } else {
       return(markers)
@@ -78,8 +86,8 @@ return.DE <- function(
 
   if (isTRUE(name.only)) {
     DE <- rownames(markers)[keep]
-    print(length(DE))
-    print(head(DE))
+    message(length(DE))
+    message(head(DE))
     return(DE)
   } else {
     markers_filt <- markers[keep, , drop = FALSE]
@@ -116,16 +124,19 @@ return.DE <- function(
 #' @param full_list Logical. If TRUE, returns all genes regardless of p-value.
 #' @param ... Additional arguments passed to \code{Seurat::FindMarkers}.
 #'
+#' @import Seurat
 #' @return A vector of gene names or a data.frame containing DE statistics.
 #'
 #' @export
 #'
 #' @examples
-#' # Run standard Wilcoxon DE
-#' # res <- FindMarker.CellDEEP(my_obj, ident.1 = "A", group.by = "group")
 #'
 #' # Run DE with K-means pooling
-#' # res <- FindMarker.CellDEEP(my_obj, ident.1 = "A", group.by = "group", Pool = TRUE, pool_way = "kmean")
+#' #' @examples
+#' # FindMarker.CellDEEP(obj, ident.1 = "A", ident.2 = "B",
+#' #                     group.by = "group", Pool = TRUE,
+#' #                     pool_way = "kmean")
+
 FindMarker.CellDEEP <- function(
     object,
     ident.1         = NULL,
@@ -165,7 +176,7 @@ FindMarker.CellDEEP <- function(
 
   } else {  # Pool = TRUE : run CellDEEP
 
-    print("Start Pooling.....")
+    message("Start Pooling.....")
 
     if (pool_way == "kmean") {
 
@@ -185,17 +196,18 @@ FindMarker.CellDEEP <- function(
         object,
         readcounts = readcounts,
         n_cells    = n_cells,
-        assay_name = assay
+        assay_name = assay,
+        cell_cutoff = cell_cutoff
       )
 
     } else {
       stop("Wrong pooling way, choose 'kmean' or 'random'")
     }
 
-    print("FindMarker running.....")
-    print("1st ident is:"); print(ident.1)
-    print("2nd ident is:"); print(ident.2)
-    print("group by:");    print(group.by)
+    message("FindMarker running.....")
+    message("1st ident is:"); message(ident.1)
+    message("2nd ident is:"); message(ident.2)
+    message("group by:");    message(group.by)
 
     pooled.object <- Seurat::NormalizeData(pooled.object)
     pooled.object <- Seurat::FindVariableFeatures(

@@ -1,0 +1,109 @@
+---
+title: "my-vignette"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{my-vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+# Introduction to CellDEEP
+
+Single-cell RNA sequencing (scRNA-seq) allows us to explore gene expression at an unprecedented resolution, but it faces significant challenges like high dropout rates and data sparsity. CellDEEP was developed to bridge the gap between robust but coarse pseudobulk methods and sensitive but potentially biased single-cell methods.
+
+Check our paper for details: https://gla-my.sharepoint.com/:w:/g/personal/domenico_somma_glasgow_ac_uk/IQClckLR7tE6SLF5Raw7J39PAWbMgDQf-qdc73jdZYNDUHE?e=j0le0G
+
+# load data
+
+First we'll load in the data we're using, pre-prepared from CellDEEP package.
+
+```{r, load_data}
+data("pDC")
+```
+
+## Prepare CellDEEP
+
+loading CellDEEP.
+```{r}
+library(CellDEEP)
+```
+
+### Prepare the data
+
+First, we pre-processs the data, creating "sample_id","group_id" and "cluster_id" for further process.
+
+```{r setup}
+pDC <- prepare_data(pDC, sample_id = "sample_id", group_id = "Worst_Clinical_Status", cluster_id = "initial_clustering")
+```
+
+
+### Run CellDEEP
+We can create pooled object only.We can select cells by Kmean clustering:
+```{r}
+pooled.object <- CellDEEP.Kmean(
+        pDC,
+        readcounts = "sum",
+        n_cells    = 5,
+        assay_name = "RNA",
+        cell_cutoff = 5
+      )
+
+#check the object
+pooled.object
+```
+or we can do it randomly:
+```{r}
+pooled.object <- CellDEEP.Random(
+        pDC,
+        readcounts = "sum",
+        n_cells    = 5,
+        assay_name = "RNA",
+        cell_cutoff = 5
+      )
+
+#check the object
+pooled.object
+```
+
+Then process the pooled object and run DE with FindMarker:
+```{r}
+pooled.object <- Seurat::NormalizeData(pooled.object)
+pooled.object <- Seurat::FindVariableFeatures(
+  pooled.object,
+  selection.method = "vst",
+  nfeatures        = 2000
+)
+all.genes <- rownames(pooled.object)
+pooled.object <- Seurat::ScaleData(pooled.object, features = all.genes)
+
+markers <- Seurat::FindMarkers(
+  pooled.object,
+  ident.1         = "Healthy",
+  ident.2         = "Severe",
+  group.by        = "group_id",
+)
+
+
+DE <- rownames(subset(markers, p_val_adj < 0.05, na.rm = T))
+```
+You can see markers has result but DE is null - there are too limited cells in example data so nothing can pass significance test. Try it on a larger data!
+
+### Run CellDEEP with DE analysis
+We can also run CellDEEP with DE analysis directly:
+
+```{r}
+#K-mean pooling:
+de.test <- FindMarker.CellDEEP(pDC, Pool = TRUE, ident.1 = "Healthy", ident.2 = "Severe", group.by = "group_id", n_cells = 4, cell_cutoff = 4, assay = "RNA", pool_way = "kmean")
+
+#Randomly pooling:
+de.test <- FindMarker.CellDEEP(pDC, Pool = TRUE, ident.1 = "Healthy", ident.2 = "Severe", group.by = "group_id", n_cells = 4, cell_cutoff = 4, assay = "RNA", pool_way = "random")
+```
+

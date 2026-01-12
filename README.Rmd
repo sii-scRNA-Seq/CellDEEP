@@ -18,7 +18,11 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of CellDEEP is to ...
+## Introduction to CellDEEP
+
+Single-cell RNA sequencing (scRNA-seq) allows us to explore gene expression at an unprecedented resolution, but it faces significant challenges like high dropout rates and data sparsity. CellDEEP was developed to bridge the gap between robust but coarse pseudobulk methods and sensitive but potentially biased single-cell methods.
+
+Check our paper for details: https://gla-my.sharepoint.com/:w:/g/personal/domenico_somma_glasgow_ac_uk/IQClckLR7tE6SLF5Raw7J39PAWbMgDQf-qdc73jdZYNDUHE?e=j0le0G
 
 ## Installation
 You can install the development version of CellDEEP like so:
@@ -47,7 +51,7 @@ To quickly run CellDEEP, just need to prepare the data, then run `FindMarker.Cel
 #This is a test to see if the code is working, will reutrn 0 DE genes.
 #For a actual test, please use data like: /datastore/Yiyi/datathon/Test_Dataset/covid_pDC_severeVShealthy.rds
 
-pdc <- prepare_data(pDC, sample_id = "sample_id", group_id = "Worst_Clinical_Status", cluster_id = "initial_clustering", assay = "covid")
+pdc <- prepare_data(pDC, sample_id = "sample_id", group_id = "Worst_Clinical_Status", cluster_id = "initial_clustering")
 
 #K-mean pooling:
 de.test <- FindMarker.CellDEEP(pdc, Pool = TRUE, ident.1 = "Healthy", ident.2 = "Severe", group.by = "group_id", n_cells = 6, cell_cutoff = 10, assay = "RNA", pool_way = "kmean")

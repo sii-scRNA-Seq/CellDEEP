@@ -57,5 +57,11 @@ filtering and provides the option to return either gene names or a full results 
 # genes <- return.DE(my_seurat, DE.ident.1 = "Control", DE.group = "condition")
 
 # Get full table of significant markers
-# marker_table <- return.DE(my_seurat, DE.ident.1 = "B_Cell", DE.group = "celltype", name.only = FALSE)
+# marker_table <- return.DE(
+#   my_seurat,
+#   DE.ident.1 = "B_Cell",
+#   DE.ident.2 = "T_Cell",
+#   DE.group = "celltype",
+#   name.only = FALSE
+# )
 }

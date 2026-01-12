@@ -10,7 +10,6 @@ prepare_data(
   sample_id,
   group_id,
   cluster_id,
-  Ground.truth = FALSE,
   file_path = NULL
 )
 }
@@ -24,8 +23,6 @@ prepare_data(
 \item{group_id}{Character. Metadata column name for groups.}
 
 \item{cluster_id}{Character. Metadata column name for clusters.}
-
-\item{Ground.truth}{Logical. If TRUE, extracts ground truth genes.}
 
 \item{file_path}{Character. Path to save ground truth reports.}
 }

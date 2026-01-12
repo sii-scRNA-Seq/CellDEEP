@@ -68,9 +68,10 @@ It can run standard Seurat DE or first aggregate cells into pseudocells
 using K-means or Random pooling before performing the analysis.
 }
 \examples{
-# Run standard Wilcoxon DE
-# res <- FindMarker.CellDEEP(my_obj, ident.1 = "A", group.by = "group")
 
 # Run DE with K-means pooling
-# res <- FindMarker.CellDEEP(my_obj, ident.1 = "A", group.by = "group", Pool = TRUE, pool_way = "kmean")
+#' @examples
+# FindMarker.CellDEEP(obj, ident.1 = "A", ident.2 = "B",
+#                     group.by = "group", Pool = TRUE,
+#                     pool_way = "kmean")
 }
