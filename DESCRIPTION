@@ -1,7 +1,7 @@
 Package: CellDEEP
 Type: Package
 Title: Cell DiffErential Expression by Pooling (CellDEEP)
-Version: 0.1.0
+Version: 1.0.0
 Authors@R: person("Yiyi", "Cheng", email = "2593244c@student.gla.ac.uk",role = c("aut", "cre"), comment = c(ORCID = "0009-0005-3329-6842"))
 Description: A package to pool cells together before running differentially expression(DE) analysis. Tell CellDEEP how many cells you want to pool together(which shall be determined by the overall cell number of data), then run DE analysis .
 License: GPL (>= 3)
