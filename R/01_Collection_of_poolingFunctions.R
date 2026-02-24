@@ -14,8 +14,8 @@
 #' @param assay_name Character. The assay to pull counts from (default "RNA").
 #' @param readcounts Character. Aggregation method: "mean" (rounded average),
 #' "sum", "10X" (mean * 10).
-#' @param cell_cutoff Integer. Minimum cells required in a sample-cluster group
-#' to perform pooling (default 25).
+#' @param min_cells_per_subgroup Integer. Minimum cells required in each
+#' sample-cluster subgroup to perform pooling (default 25).
 #'
 #' @import Seurat
 #'
@@ -30,7 +30,8 @@
 #' @examples
 #' # pooled_obj <- CellDEEP.Kmean(dataset = my_seurat, n_cells = 10, readcounts = "mean")
 
-CellDEEP.Kmean <- function(dataset, n_cells= 10, nstart=100, assay_name="RNA", readcounts = "mean", cell_cutoff = 25){
+CellDEEP.Kmean <- function(dataset, n_cells= 10, nstart=100, assay_name="RNA",
+                           readcounts = "mean", min_cells_per_subgroup = 25){
 
   pseudo_cell_mtx <- matrix(, nrow=length(dataset[[assay_name]]$counts@Dimnames[[1]]), ncol=0)
 
@@ -57,7 +58,7 @@ CellDEEP.Kmean <- function(dataset, n_cells= 10, nstart=100, assay_name="RNA", r
           if(y %in% as.factor(cluster_subset$sample_id)){
             counter = 0
             sample_subset <- subset(cluster_subset, subset=sample_id==y)
-            if(as.integer(length(colnames(sample_subset))) > cell_cutoff){
+            if(as.integer(length(colnames(sample_subset))) > min_cells_per_subgroup){
 
               k = as.integer(length(colnames(sample_subset))/n_cells)+1
 
@@ -156,8 +157,8 @@ CellDEEP.Kmean <- function(dataset, n_cells= 10, nstart=100, assay_name="RNA", r
 #' @param n_cells Integer. The number of cells to pool into each pseudocell.
 #' @param assay_name Character. The assay to use for counts (default "RNA").
 #' @param readcounts Character. Method to aggregate counts: "sum" or "mean".
-#' @param cell_cutoff Integer. Minimum cells required in a sample-cluster group
-#' to perform pooling (default 25).
+#' @param min_cells_per_subgroup Integer. Minimum cells required in each
+#' sample-cluster subgroup to perform pooling (default 25).
 #'
 #' @import Seurat
 #'
@@ -172,7 +173,9 @@ CellDEEP.Kmean <- function(dataset, n_cells= 10, nstart=100, assay_name="RNA", r
 #'
 #' @examples
 #' # random_pooled_obj <- CellDEEP.Random(dataset = my_seurat, n_cells = 10, readcounts = "mean")
-CellDEEP.Random <- function(dataset, n_cells= 10, assay_name="RNA", cell_cutoff = 25, readcounts = "mean"){
+CellDEEP.Random <- function(dataset, n_cells= 10, assay_name="RNA",
+                            min_cells_per_subgroup = 25, readcounts = "mean"){
+
   pseudo_cell_mtx <- matrix(, nrow=length(dataset[[assay_name]]$counts@Dimnames[[1]]), ncol=0)
 
   meta_data = c()
@@ -200,7 +203,7 @@ CellDEEP.Random <- function(dataset, n_cells= 10, assay_name="RNA", cell_cutoff 
           if(y %in% as.factor(cluster_subset$sample_id)){
             sample_subset <- subset(cluster_subset, subset= sample_id ==y)  # subsets according to the sample/replicate
 
-            if(as.integer(length(colnames(sample_subset))) > cell_cutoff){
+            if(as.integer(length(colnames(sample_subset))) > min_cells_per_subgroup){
 
               real.cells <- rownames(sample_subset@meta.data) #get cell rowname to pool
               cluster_counter = 0

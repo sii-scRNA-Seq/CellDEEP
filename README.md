@@ -34,24 +34,39 @@ Before using, don’t forget library it:
 library(CellDEEP)
 ```
 
-To quickly run CellDEEP, just need to prepare the data, then run
+Vignette:
+
+``` r
+vignette("CellDEEP_vignette", package = "CellDEEP")
+```
+
+To quickly run CellDEEP, pass your metadata column names directly into
 `FindMarker.CellDEEP`:
 
 ``` r
-#This is a test to see if the code is working, will reutrn 0 DE genes.
+data("sim")
 
-data("pDC")
-pdc <- prepare_data(pDC, sample_id = "sample_id", group_id = "Worst_Clinical_Status", cluster_id = "initial_clustering")
-
-#K-mean pooling:
-de.test <- FindMarker.CellDEEP(pdc, Pool = TRUE, ident.1 = "Healthy", ident.2 = "Severe", group.by = "group_id", n_cells = 4, cell_cutoff = 4, assay = "RNA", pool_way = "kmean")
-#Randomly pooling:
-de.test <- FindMarker.CellDEEP(pdc, Pool = TRUE, ident.1 = "Healthy", ident.2 = "Severe", group.by = "group_id", n_cells = 4, cell_cutoff = 4, assay = "RNA", pool_way = "random")
+# Pool defaults to TRUE
+de.test <- FindMarker.CellDEEP(sim, 
+                          group_id = "Status", 
+                          sample_id = "DonorID", 
+                          cluster_id = "cluster_id",
+                          Pool = TRUE,
+                          test.use = "wilcox", 
+                          n_cells = 3, 
+                          min_cells_per_subgroup = 1,
+                          cell_selection = "random", 
+                          readcounts = "sum", 
+                          logfc.threshold = 0.25, 
+                          ident.1 = "Case", 
+                          ident.2 = "Control")
 ```
 
-## Update
-
-This section introduce what is updated.
+This section introduce what is updated. 1. FindMarker.CellDEEP Pool
+default should be TRUE 2. Not clear what is cell_cutoff, replaced with
+new parameter 3. Change “pool_way” to cell_selection 4. Vignette easy to
+access/read 5. Change toy data to simulated data, will generate DE
+result now.
 
 For publish version: Delete code used for experiment, keep only CellDEEP
 function code. Delete all the comments, clean the code. Rename pooling

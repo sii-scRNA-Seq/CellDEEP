@@ -1,109 +1,98 @@
 ---
-title: "my-vignette"
+title: "CellDEEP Quick Start"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{my-vignette}
+  %\VignetteIndexEntry{CellDEEP Quick Start}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
 ```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
-)
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
+## What CellDEEP does
 
-# Introduction to CellDEEP
+CellDEEP reduces scRNA-seq sparsity by pooling cells into pseudocells before DE testing.
 
-Single-cell RNA sequencing (scRNA-seq) allows us to explore gene expression at an unprecedented resolution, but it faces significant challenges like high dropout rates and data sparsity. CellDEEP was developed to bridge the gap between robust but coarse pseudobulk methods and sensitive but potentially biased single-cell methods.
-
-Check our paper for details: https://gla-my.sharepoint.com/:w:/g/personal/domenico_somma_glasgow_ac_uk/IQClckLR7tE6SLF5Raw7J39PAWbMgDQf-qdc73jdZYNDUHE?e=j0le0G
-
-# load data
-
-First we'll load in the data we're using, pre-prepared from CellDEEP package.
+## Load package and example data
 
 ```{r, load_data}
-data("pDC")
-```
-
-## Prepare CellDEEP
-
-loading CellDEEP.
-```{r}
 library(CellDEEP)
+data("sim")
 ```
 
-### Prepare the data
+## Step 1: Run DE directly with FindMarker.CellDEEP
 
-First, we pre-processs the data, creating "sample_id","group_id" and "cluster_id" for further process.
+`FindMarker.CellDEEP` includes metadata preparation internally.
+Key parameters to set:
+- `group_id`, `sample_id`, `cluster_id`: metadata column names in your Seurat object
+- `ident.1`, `ident.2`: two groups to compare
+- `cell_selection`: how to select cells for pooling (`"kmean"` or `"random"`)
+- `readcounts`: how to aggregate counts in pooled cells (`"sum"` or `"mean"`)
+- `min_cells_per_subgroup`: minimum cells required in each sample-cluster subgroup for pooling
 
-```{r setup}
-pDC <- prepare_data(pDC, sample_id = "sample_id", group_id = "Worst_Clinical_Status", cluster_id = "initial_clustering")
-```
-
-
-### Run CellDEEP
-We can create pooled object only.We can select cells by Kmean clustering:
 ```{r}
-pooled.object <- CellDEEP.Kmean(
-        pDC,
-        readcounts = "sum",
-        n_cells    = 5,
-        assay_name = "RNA",
-        cell_cutoff = 5
-      )
-
-#check the object
-pooled.object
-```
-or we can do it randomly:
-```{r}
-pooled.object <- CellDEEP.Random(
-        pDC,
-        readcounts = "sum",
-        n_cells    = 5,
-        assay_name = "RNA",
-        cell_cutoff = 5
-      )
-
-#check the object
-pooled.object
-```
-
-Then process the pooled object and run DE with FindMarker:
-```{r}
-pooled.object <- Seurat::NormalizeData(pooled.object)
-pooled.object <- Seurat::FindVariableFeatures(
-  pooled.object,
-  selection.method = "vst",
-  nfeatures        = 2000
+de.test <- FindMarker.CellDEEP(
+  sim,
+  group_id = "Status",
+  sample_id = "DonorID",
+  cluster_id = "cluster_id",
+  Pool = TRUE,
+  test.use = "wilcox",
+  n_cells = 3,
+  min_cells_per_subgroup = 1,
+  cell_selection = "random",
+  readcounts = "sum",
+  logfc.threshold = 0.25,
+  ident.1 = "Case",
+  ident.2 = "Control"
 )
-all.genes <- rownames(pooled.object)
-pooled.object <- Seurat::ScaleData(pooled.object, features = all.genes)
-
-markers <- Seurat::FindMarkers(
-  pooled.object,
-  ident.1         = "Healthy",
-  ident.2         = "Severe",
-  group.by        = "group_id",
-)
-
-
-DE <- rownames(subset(markers, p_val_adj < 0.05, na.rm = T))
 ```
-You can see markers has result but DE is null - there are too limited cells in example data so nothing can pass significance test. Try it on a larger data!
 
-### Run CellDEEP with DE analysis
-We can also run CellDEEP with DE analysis directly:
+## Step 2: Pool cells only (optional)
+
+Use these functions if you want pooled objects without running DE immediately.
+
+`min_cells_per_subgroup` means the minimum number of cells required in each
+`sample_id x cluster_id` subgroup before pooling is performed.
+
+Pooling functions use standardized metadata fields (`sample_id`, `group_id`, `cluster_id`),
+so prepare once before pooling:
 
 ```{r}
-#K-mean pooling:
-de.test <- FindMarker.CellDEEP(pDC, Pool = TRUE, ident.1 = "Healthy", ident.2 = "Severe", group.by = "group_id", n_cells = 4, cell_cutoff = 4, assay = "RNA", pool_way = "kmean")
-
-#Randomly pooling:
-de.test <- FindMarker.CellDEEP(pDC, Pool = TRUE, ident.1 = "Healthy", ident.2 = "Severe", group.by = "group_id", n_cells = 4, cell_cutoff = 4, assay = "RNA", pool_way = "random")
+pool_input <- prepare_data(
+  sim,
+  sample_id = "DonorID",
+  group_id = "Status",
+  cluster_id = "cluster_id"
+)
 ```
 
+### K-means pooling
+
+```{r}
+pooled_kmean <- CellDEEP.Kmean(
+  pool_input,
+  readcounts = "sum",
+  n_cells = 3,
+  min_cells_per_subgroup = 1,
+  assay_name = "RNA"
+)
+pooled_kmean
+```
+
+### Random pooling
+
+```{r}
+pooled_random <- CellDEEP.Random(
+  pool_input,
+  readcounts = "sum",
+  n_cells = 5,
+  min_cells_per_subgroup = 1,
+  assay_name = "RNA"
+)
+pooled_random
+```
+
+If no genes pass the adjusted p-value filter in this small example dataset, try a larger dataset or set `full_list = TRUE`.

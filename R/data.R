@@ -1,11 +1,11 @@
-#' Sample pDC cells from Covid PBMC data
+#' Sample simulated cells from muscat package
 #'
-#' A dataset containing 100 randomly sampled pDC cells for
+#' A dataset containing 200 simulated cells(100 per group) for
 #' demonstrating CellDEEP functions.
 #'
 #' @docType data
-#' @source \url{https://doi.org/10.1038/s41591-021-01329-2}
-#' @usage data(pDC)
+#' @source simulated data with muscat package
+#' @usage data(sim)
 #' @format A Seurat object
-#' @name pDC
+#' @name sim
 NULL
