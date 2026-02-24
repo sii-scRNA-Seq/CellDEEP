@@ -34,11 +34,8 @@ Before using, don’t forget library it:
 library(CellDEEP)
 ```
 
-Vignette:
-
-``` r
-vignette("CellDEEP_vignette", package = "CellDEEP")
-```
+Vignette: \## Documentation - [Tutorial
+vignette](articles/CellDEEP_vignette.html)
 
 To quickly run CellDEEP, pass your metadata column names directly into
 `FindMarker.CellDEEP`:
