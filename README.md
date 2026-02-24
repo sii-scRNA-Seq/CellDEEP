@@ -36,7 +36,8 @@ library(CellDEEP)
 
 ### Vignette:
 
-- [Tutorial vignette](docs/articles/CellDEEP_vignette.html)
+- [Tutorial
+  vignette](https://sii-scrna-seq.github.io/CellDEEP/articles/CellDEEP_vignette.html)
 
 To quickly run CellDEEP, pass your metadata column names directly into
 `FindMarker.CellDEEP`:
