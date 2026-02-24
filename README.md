@@ -62,12 +62,16 @@ de.test <- FindMarker.CellDEEP(sim,
                           ident.2 = "Control")
 ```
 
-This section introduce what is updated. 1. FindMarker.CellDEEP Pool
-default should be TRUE 2. Not clear what is cell_cutoff, replaced with
-new parameter 3. Change “pool_way” to cell_selection 4. Vignette easy to
-access/read 5. Change toy data to simulated data, will generate DE
-result now.
+This section introduce what is updated.
 
-For publish version: Delete code used for experiment, keep only CellDEEP
-function code. Delete all the comments, clean the code. Rename pooling
-function as CellDEEP.Kmean and CellDEEP.Random.
+For version 1.0.1:  
+1. FindMarker.CellDEEP Pool default should be TRUE.  
+2. Not clear what is cell_cutoff, replaced with new parameter  
+3. Change “pool_way” to cell_selection  
+4. Vignette easy to access/read  
+5. Change toy data to simulated data, will generate DE result now.  
+
+For publish version(1.0.0):  
+Delete code used for experiment, keep only CellDEEP function code.  
+Delete all the comments, clean the code.  
+Rename pooling function as CellDEEP.Kmean and CellDEEP.Random.  
