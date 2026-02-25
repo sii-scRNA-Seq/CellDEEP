@@ -15,6 +15,11 @@ challenges like high dropout rates and data sparsity. CellDEEP was
 developed to bridge the gap between robust but coarse pseudobulk methods
 and sensitive but potentially biased single-cell methods.
 
+<figure>
+<img src="man/figures/CellDEEP_overview.png" alt="CellDEEP overview" />
+<figcaption aria-hidden="true">CellDEEP overview</figcaption>
+</figure>
+
 Check our paper for details:
 <https://gla-my.sharepoint.com/:w:/g/personal/domenico_somma_glasgow_ac_uk/IQClckLR7tE6SLF5Raw7J39PAWbMgDQf-qdc73jdZYNDUHE?e=j0le0G>
 
