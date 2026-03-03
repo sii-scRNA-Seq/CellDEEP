@@ -42,23 +42,41 @@ CellDEEP.Kmean <- function(dataset, n_cells= 10, nstart=100, assay_name="RNA",
   sample_id = c()
   ktable = data.frame(row.names = rownames(dataset))
   drop_out_counter = 0
+  total_input_cells <- ncol(dataset)
+  empty_group_skips <- 0
+  empty_cluster_skips <- 0
+  empty_sample_skips <- 0
+  below_min_subgroup_skips <- 0
+  pooled_input_cells <- 0
+  singleton_dropped_cells <- 0
 
   message("Pooling...")
   for (x in levels(as.factor(dataset$group_id))){ # This is important
-    group_subset <- subset(dataset, subset= group_id ==x)
+    group_cells <- rownames(dataset@meta.data)[dataset@meta.data$group_id == x]
+    if (length(group_cells) == 0) {
+      empty_group_skips <- empty_group_skips + 1
+      next
+    }
+    group_subset <- subset(dataset, cells = group_cells)
 
     #for each group...
     for (z in levels(as.factor(dataset$cluster_id))) {
-      cluster_subset <- subset(group_subset,subset=cluster_id==z)
-
-      if(z %in% cluster_subset$cluster_id ){
+      cluster_cells <- rownames(group_subset@meta.data)[group_subset@meta.data$cluster_id == z]
+      if (length(cluster_cells) == 0) {
+        empty_cluster_skips <- empty_cluster_skips + 1
+        next
+      }
+      cluster_subset <- subset(group_subset, cells = cluster_cells)
 
         for(y in levels(as.factor(dataset$sample_id))){
-
-          if(y %in% as.factor(cluster_subset$sample_id)){
-            counter = 0
-            sample_subset <- subset(cluster_subset, subset=sample_id==y)
-            if(as.integer(length(colnames(sample_subset))) > min_cells_per_subgroup){
+          sample_cells <- rownames(cluster_subset@meta.data)[cluster_subset@meta.data$sample_id == y]
+          if (length(sample_cells) == 0) {
+            empty_sample_skips <- empty_sample_skips + 1
+            next
+          }
+          counter = 0
+          sample_subset <- subset(cluster_subset, cells = sample_cells)
+          if(as.integer(length(colnames(sample_subset))) > min_cells_per_subgroup){
 
               k = as.integer(length(colnames(sample_subset))/n_cells)+1
 
@@ -77,6 +95,7 @@ CellDEEP.Kmean <- function(dataset, n_cells= 10, nstart=100, assay_name="RNA",
                 cells <- rownames(k.clusters@meta.data) #get cell rownames for kcluster
                 cell_number <- length(cells)
                 if(cell_number > 1){
+                  pooled_input_cells <- pooled_input_cells + cell_number
 
                  #get cell number that would be pooled
                   pool <- k.clusters[[assay_name]]$counts[,cells] #get the cell information inside kcluster
@@ -115,14 +134,20 @@ CellDEEP.Kmean <- function(dataset, n_cells= 10, nstart=100, assay_name="RNA",
 
                 }else{
                   drop_out_counter = drop_out_counter + 1
+                  singleton_dropped_cells <- singleton_dropped_cells + cell_number
                 }
               }
-            }
+          } else {
+            below_min_subgroup_skips <- below_min_subgroup_skips + 1
           }
         }
-      }
     }
   }
+
+  if (ncol(pseudo_cell_mtx) == 0) {
+    stop("No pseudocells were generated. Check group/sample/cluster IDs or lower min_cells_per_subgroup.")
+  }
+
   #Create Seurat object
   row.names(pseudo_cell_mtx) <- dataset[[assay_name]]$counts@Dimnames[[1]]
   colnames(pseudo_cell_mtx) <- meta_data
@@ -139,6 +164,15 @@ CellDEEP.Kmean <- function(dataset, n_cells= 10, nstart=100, assay_name="RNA",
 
   message("Drop out cell number during kmean pooling is:")
   message(drop_out_counter)
+  message("Pooling summary (kmean):")
+  message(paste0("Input cells: ", total_input_cells))
+  message(paste0("Cells kept in pooled pseudocells: ", pooled_input_cells))
+  message(paste0("Cells not kept (approx): ", total_input_cells - pooled_input_cells))
+  message(paste0("Skipped empty groups: ", empty_group_skips))
+  message(paste0("Skipped empty clusters: ", empty_cluster_skips))
+  message(paste0("Skipped empty samples: ", empty_sample_skips))
+  message(paste0("Skipped subgroups (<= min_cells_per_subgroup): ", below_min_subgroup_skips))
+  message(paste0("Dropped singleton cells after kmeans split: ", singleton_dropped_cells))
 
   return(pseudo_cell_seurat)
 }
@@ -183,33 +217,51 @@ CellDEEP.Random <- function(dataset, n_cells= 10, assay_name="RNA",
   cluster_id = c()
   sample_id = c()
   rtable = data.frame(row.names = rownames(dataset))
+  total_input_cells <- ncol(dataset)
+  empty_group_skips <- 0
+  empty_cluster_skips <- 0
+  empty_sample_skips <- 0
+  below_min_subgroup_skips <- 0
+  pooled_input_cells <- 0
+  remainder_dropped_cells <- 0
 
   message("Pooling...")
   for (x in levels(as.factor(dataset$group_id))){
-    group_subset <- subset(dataset, subset= group_id ==x)
+    group_cells <- rownames(dataset@meta.data)[dataset@meta.data$group_id == x]
+    if (length(group_cells) == 0) {
+      empty_group_skips <- empty_group_skips + 1
+      next
+    }
+    group_subset <- subset(dataset, cells = group_cells)
 
     #for each group...
     for (z in levels(as.factor(group_subset$cluster_id))) {
-      cluster_subset <- subset(group_subset,subset=cluster_id==z)
-
-      #if the group has the cluster (?! Not sure why this step, to handle multiple clusters?)
-      if(z %in% cluster_subset$cluster_id ){
+      cluster_cells <- rownames(group_subset@meta.data)[group_subset@meta.data$cluster_id == z]
+      if (length(cluster_cells) == 0) {
+        empty_cluster_skips <- empty_cluster_skips + 1
+        next
+      }
+      cluster_subset <- subset(group_subset, cells = cluster_cells)
 
         #For each sample/patient/replicate
         for(y in levels(as.factor(dataset$sample_id))){
           counter = 0
 
-          #If the patient belong to the same group z
-          if(y %in% as.factor(cluster_subset$sample_id)){
-            sample_subset <- subset(cluster_subset, subset= sample_id ==y)  # subsets according to the sample/replicate
+          sample_cells <- rownames(cluster_subset@meta.data)[cluster_subset@meta.data$sample_id == y]
+          if (length(sample_cells) == 0) {
+            empty_sample_skips <- empty_sample_skips + 1
+            next
+          }
+          sample_subset <- subset(cluster_subset, cells = sample_cells)  # subsets according to the sample/replicate
 
-            if(as.integer(length(colnames(sample_subset))) > min_cells_per_subgroup){
+          if(as.integer(length(colnames(sample_subset))) > min_cells_per_subgroup){
 
               real.cells <- rownames(sample_subset@meta.data) #get cell rowname to pool
               cluster_counter = 0
 
               while (length(real.cells) >=n_cells){  #when there are more than n cells in the cluster
                 pool<- sample(real.cells, n_cells, replace = FALSE) #randomly pool n cells from the subset
+                pooled_input_cells <- pooled_input_cells + n_cells
 
                 cell_id_to_pool <- pool
 
@@ -241,12 +293,18 @@ CellDEEP.Random <- function(dataset, n_cells= 10, assay_name="RNA",
                 rtable.cells <- data.frame(row.names = cell_id_to_pool, pooled_cells=rep(paste(y,cluster_counter,sep = "_"), length(cell_id_to_pool)))
                 rtable <- rbind(rtable,rtable.cells)
               }
-            }
+              remainder_dropped_cells <- remainder_dropped_cells + length(real.cells)
+          } else {
+            below_min_subgroup_skips <- below_min_subgroup_skips + 1
           }
         }
-      }
     }
   }
+
+  if (ncol(pseudo_cell_mtx) == 0) {
+    stop("No pseudocells were generated. Check group/sample/cluster IDs or lower min_cells_per_subgroup.")
+  }
+
   #Create Seurat object
   row.names(pseudo_cell_mtx) <- dataset[[assay_name]]$counts@Dimnames[[1]]
   colnames(pseudo_cell_mtx) <- meta_data
@@ -260,6 +318,15 @@ CellDEEP.Random <- function(dataset, n_cells= 10, assay_name="RNA",
   Idents(dataset) <- "Pooled_randomly_cells"
 
   table(pseudo_cell_seurat@meta.data$sample_id)
+  message("Pooling summary (random):")
+  message(paste0("Input cells: ", total_input_cells))
+  message(paste0("Cells kept in pooled pseudocells: ", pooled_input_cells))
+  message(paste0("Cells not kept (approx): ", total_input_cells - pooled_input_cells))
+  message(paste0("Skipped empty groups: ", empty_group_skips))
+  message(paste0("Skipped empty clusters: ", empty_cluster_skips))
+  message(paste0("Skipped empty samples: ", empty_sample_skips))
+  message(paste0("Skipped subgroups (<= min_cells_per_subgroup): ", below_min_subgroup_skips))
+  message(paste0("Dropped remainder cells (< n_cells) after random pooling: ", remainder_dropped_cells))
 
   return(pseudo_cell_seurat)
 }
