@@ -21,7 +21,7 @@ and sensitive but potentially biased single-cell methods.
 </figure>
 
 Check our paper for details:
-<https://gla-my.sharepoint.com/:w:/g/personal/domenico_somma_glasgow_ac_uk/IQClckLR7tE6SLF5Raw7J39PAWbMgDQf-qdc73jdZYNDUHE?e=j0le0G>
+https://www.biorxiv.org/content/10.64898/2026.03.09.710522v1
 
 ## Installation
 
