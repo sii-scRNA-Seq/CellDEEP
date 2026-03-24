@@ -41,5 +41,22 @@ This function requires that PCA has already been run on the input \code{dataset}
 as it uses the "pca" reduction for clustering.
 }
 \examples{
-# pooled_obj <- CellDEEP.Kmean(dataset = my_seurat, n_cells = 10, readcounts = "mean")
+\donttest{
+data("sim")
+pool_input <- prepare_data(
+  sim,
+  sample_id = "DonorID",
+  group_id = "Status",
+  cluster_id = "cluster_id"
+)
+
+pooled_kmean <- CellDEEP.Kmean(
+  pool_input,
+  readcounts = "sum",
+  n_cells = 3,
+  min_cells_per_subgroup = 1,
+  assay_name = "RNA"
+)
+pooled_kmean
+}
 }

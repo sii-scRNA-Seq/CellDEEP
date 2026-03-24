@@ -16,4 +16,5 @@ data(sim)
 \description{
 A dataset containing 200 simulated cells(100 per group) for
 demonstrating CellDEEP functions.
+Can be found at \doi{10.5281/zenodo.18863779}
 }

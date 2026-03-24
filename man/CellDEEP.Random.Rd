@@ -38,5 +38,22 @@ automatically skipped. The function also generates a DimPlot to visualize
 the random pooling across samples.
 }
 \examples{
-# random_pooled_obj <- CellDEEP.Random(dataset = my_seurat, n_cells = 10, readcounts = "mean")
+\donttest{
+data("sim")
+pool_input <- prepare_data(
+  sim,
+  sample_id = "DonorID",
+  group_id = "Status",
+  cluster_id = "cluster_id"
+)
+
+pooled_random <- CellDEEP.Random(
+  pool_input,
+  readcounts = "sum",
+  n_cells = 3,
+  min_cells_per_subgroup = 1,
+  assay_name = "RNA"
+)
+pooled_random
+}
 }
