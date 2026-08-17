@@ -25,10 +25,10 @@ https://www.biorxiv.org/content/10.64898/2026.03.09.710522v1
 
 ## Installation
 
-You can install the development version of CellDEEP via github:
+You can install the CellDEEP from CRAN:
 
 ``` r
-devtools::install_github("sii-scRNA-Seq/CellDEEP")
+install.packages("CellDEEP")
 ```
 
 ## Example
