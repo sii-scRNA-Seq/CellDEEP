@@ -64,10 +64,59 @@ de.test <- FindMarker.CellDEEP(sim,
                           ident.1 = "Case", 
                           ident.2 = "Control")
 
+de.test
+```
+
+The output here would be a gene list.
+If you want the whole DE output list include p-value and logFC, simply change the parameter `name_only` to FALSE:
+
+```{r}
+de.test <- FindMarker.CellDEEP(sim, 
+                          group_id = "Status", 
+                          sample_id = "DonorID", 
+                          cluster_id = "cluster_id",
+                          Pool = TRUE,
+                          test.use = "wilcox", 
+                          n_cells = 3, 
+                          min_cells_per_subgroup = 1,
+                          cell_selection = "random", 
+                          readcounts = "sum", 
+                          logfc.threshold = 0.25, 
+                          ident.1 = "Case", 
+                          ident.2 = "Control",
+                          name.only = FALSE)
+
+de.test
+```
+
+And if you want full list without any filtering for analysis like GSEA, simply set `full_list` to TRUE:
+
+```{r}
+de.test.full <- FindMarker.CellDEEP(sim, 
+                          group_id = "Status", 
+                          sample_id = "DonorID", 
+                          cluster_id = "cluster_id",
+                          Pool = TRUE,
+                          test.use = "wilcox", 
+                          n_cells = 3, 
+                          min_cells_per_subgroup = 1,
+                          cell_selection = "random", 
+                          readcounts = "sum", 
+                          logfc.threshold = 0.25, 
+                          ident.1 = "Case", 
+                          ident.2 = "Control",
+                          name.only = FALSE,
+                          full_list = TRUE)
+
+de.test.full
+
+#see how different they are
+length(rownames(de.test))
+length(rownames(de.test.full))
 ```
 
 
-This section introduce what is updated.
+## This section introduce what is updated.
 
 For version 1.0.1:\
 1. FindMarker.CellDEEP Pool default should be TRUE. \
