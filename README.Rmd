@@ -86,7 +86,7 @@ de.test <- FindMarker.CellDEEP(sim,
                           ident.2 = "Control",
                           name.only = FALSE)
 
-de.test
+head(de.test)
 ```
 
 And if you want full list without any filtering for analysis like GSEA, simply set `full_list` to TRUE:
@@ -108,7 +108,7 @@ de.test.full <- FindMarker.CellDEEP(sim,
                           name.only = FALSE,
                           full_list = TRUE)
 
-de.test.full
+head(de.test.full)
 
 #see how different they are
 length(rownames(de.test))
