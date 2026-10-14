@@ -6,7 +6,7 @@
 \usage{
 return.DE(
   dataset,
-  test.use = "wilcox",
+  test.use = "MAST",
   DE.ident.1,
   DE.ident.2,
   DE.group,

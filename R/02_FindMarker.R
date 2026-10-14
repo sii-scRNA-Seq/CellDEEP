@@ -25,7 +25,7 @@
 #' @export
 return.DE <- function(
     dataset,
-    test.use        = "wilcox",
+    test.use        = "MAST",
     DE.ident.1,
     DE.ident.2,
     DE.group,
@@ -164,7 +164,7 @@ FindMarker.CellDEEP <- function(
     group_id                = NULL,
     cluster_id              = NULL,
     prepare                 = TRUE,
-    test.use                = "wilcox",
+    test.use                = "MAST",
     Pool                    = TRUE,
     readcounts              = "sum",
     n_cells                 = 10,

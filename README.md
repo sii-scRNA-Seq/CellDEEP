@@ -56,7 +56,7 @@ de.test <- FindMarker.CellDEEP(sim,
                           sample_id = "DonorID", 
                           cluster_id = "cluster_id",
                           Pool = TRUE,
-                          test.use = "wilcox", 
+                          test.use = "MAST", 
                           n_cells = 3, 
                           min_cells_per_subgroup = 1,
                           cell_selection = "random", 
@@ -78,7 +78,7 @@ de.test <- FindMarker.CellDEEP(sim,
                           sample_id = "DonorID", 
                           cluster_id = "cluster_id",
                           Pool = TRUE,
-                          test.use = "wilcox", 
+                          test.use = "MAST", 
                           n_cells = 3, 
                           min_cells_per_subgroup = 1,
                           cell_selection = "random", 
@@ -109,24 +109,23 @@ de.test <- FindMarker.CellDEEP(sim,
 #> Normalizing layer: counts
 #> Finding variable features for layer counts
 #> Centering and scaling data matrix
-#> For a (much!) faster implementation of the Wilcoxon Rank Sum Test,
-#> (default method for FindMarkers) please install the presto package
-#> --------------------------------------------
-#> install.packages('devtools')
-#> devtools::install_github('immunogenomics/presto')
-#> --------------------------------------------
-#> After installation of presto, Seurat will automatically use the more 
-#> efficient implementation (no further action necessary).
-#> This message will be shown once per session
+#> 
+#> Done!
+#> Combining coefficients and standard errors
+#> Calculating log-fold changes
+#> Calculating likelihood ratio tests
+#> Refitting on reduced model...
+#> 
+#> Done!
 
 head(de.test)
 #>                 p_val avg_log2FC pct.1 pct.2    p_val_adj
-#> Gene1728 2.398196e-11   3.493846   1.0 0.567 4.796393e-08
-#> Gene1992 5.772013e-11 -11.401061   0.0 0.900 1.154403e-07
-#> Gene1626 8.774766e-11  -3.879532   0.2 1.000 1.754953e-07
-#> Gene1864 1.933222e-10 -10.188828   0.0 0.867 3.866443e-07
-#> Gene1715 1.934584e-10  -9.855602   0.0 0.867 3.869168e-07
-#> Gene1807 6.247026e-10  -9.667764   0.0 0.833 1.249405e-06
+#> Gene1728 2.135401e-18   3.493846   1.0 0.567 4.270801e-15
+#> Gene1992 5.520147e-15 -11.401061   0.0 0.900 1.104029e-11
+#> Gene1864 5.149952e-14 -10.188828   0.0 0.867 1.029990e-10
+#> Gene1715 5.149952e-14  -9.855602   0.0 0.867 1.029990e-10
+#> Gene1807 3.904984e-13  -9.667764   0.0 0.833 7.809967e-10
+#> Gene1626 7.039584e-13  -3.879532   0.2 1.000 1.407917e-09
 ```
 
 And if you want full list without any filtering for analysis like GSEA,
@@ -138,7 +137,7 @@ de.test.full <- FindMarker.CellDEEP(sim,
                           sample_id = "DonorID", 
                           cluster_id = "cluster_id",
                           Pool = TRUE,
-                          test.use = "wilcox", 
+                          test.use = "MAST", 
                           n_cells = 3, 
                           min_cells_per_subgroup = 1,
                           cell_selection = "random", 
@@ -170,19 +169,27 @@ de.test.full <- FindMarker.CellDEEP(sim,
 #> Normalizing layer: counts
 #> Finding variable features for layer counts
 #> Centering and scaling data matrix
+#> 
+#> Done!
+#> Combining coefficients and standard errors
+#> Calculating log-fold changes
+#> Calculating likelihood ratio tests
+#> Refitting on reduced model...
+#> 
+#> Done!
 
 head(de.test.full)
 #>                 p_val avg_log2FC pct.1 pct.2    p_val_adj
-#> Gene1728 2.398196e-11   3.493846   1.0 0.567 4.796393e-08
-#> Gene1992 5.772013e-11 -11.401061   0.0 0.900 1.154403e-07
-#> Gene1626 8.774766e-11  -3.879532   0.2 1.000 1.754953e-07
-#> Gene1864 1.933222e-10 -10.188828   0.0 0.867 3.866443e-07
-#> Gene1715 1.934584e-10  -9.855602   0.0 0.867 3.869168e-07
-#> Gene1807 6.247026e-10  -9.667764   0.0 0.833 1.249405e-06
+#> Gene1728 2.135401e-18   3.493846   1.0 0.567 4.270801e-15
+#> Gene1992 5.520147e-15 -11.401061   0.0 0.900 1.104029e-11
+#> Gene1864 5.149952e-14 -10.188828   0.0 0.867 1.029990e-10
+#> Gene1715 5.149952e-14  -9.855602   0.0 0.867 1.029990e-10
+#> Gene1807 3.904984e-13  -9.667764   0.0 0.833 7.809967e-10
+#> Gene1626 7.039584e-13  -3.879532   0.2 1.000 1.407917e-09
 
 #see how different they are
 length(rownames(de.test))
-#> [1] 20
+#> [1] 27
 length(rownames(de.test.full))
 #> [1] 1054
 ```

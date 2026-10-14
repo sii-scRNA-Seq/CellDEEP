@@ -13,7 +13,7 @@ FindMarker.CellDEEP(
   group_id = NULL,
   cluster_id = NULL,
   prepare = TRUE,
-  test.use = "wilcox",
+  test.use = "MAST",
   Pool = TRUE,
   readcounts = "sum",
   n_cells = 10,
