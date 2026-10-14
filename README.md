@@ -25,10 +25,10 @@ Check our paper for details:
 
 ## Installation
 
-You can install the development version of CellDEEP via github:
+You can install the CellDEEP from CRAN:
 
 ``` r
-devtools::install_github("sii-scRNA-Seq/CellDEEP")
+install.packages("CellDEEP")
 ```
 
 ## Example
