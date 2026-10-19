@@ -78,39 +78,102 @@
     
     
 <div class="section level2">
-<h2 id="what-celldeep-does">What CellDEEP does<a class="anchor" aria-label="anchor" href="#what-celldeep-does"></a>
+<h2 id="introduction-to-celldeep">Introduction to CellDEEP<a class="anchor" aria-label="anchor" href="#introduction-to-celldeep"></a>
 </h2>
-<p>CellDEEP reduces scRNA-seq sparsity by pooling cells into pseudocells
-before DE testing.</p>
+<p>Single-cell RNA sequencing (scRNA-seq) provides gene expression
+measurements at single-cell resolution, but its high sparsity and
+dropout rates can make differential expression (DE) analysis
+challenging.</p>
+<p><strong>CellDEEP</strong> reduces scRNA-seq sparsity by pooling cells
+into pseudocells before differential expression testing. It was
+developed to bridge the gap between robust but coarse pseudobulk
+approaches and sensitive but potentially biased cell-level methods.</p>
+<p>CellDEEP provides two main workflows:</p>
+<ol style="list-style-type: decimal">
+<li>
+<strong>Run differential expression directly</strong> with
+<code><a href="../reference/FindMarker.CellDEEP.html">FindMarker.CellDEEP()</a></code>. This is the recommended workflow
+when DE testing is your final goal.</li>
+<li>
+<strong>Generate pseudocells only</strong> with
+<code><a href="../reference/CellDEEP.Kmean.html">CellDEEP.Kmean()</a></code> or <code><a href="../reference/CellDEEP.Random.html">CellDEEP.Random()</a></code>. This is
+useful when you want to inspect or reuse the pooled object in downstream
+analyses.</li>
+</ol>
+<p>These are alternative workflows. You do <strong>not</strong> need to
+run the pooling functions before using
+<code><a href="../reference/FindMarker.CellDEEP.html">FindMarker.CellDEEP()</a></code>.</p>
 </div>
 <div class="section level2">
-<h2 id="load-package-and-example-data">Load package and example data<a class="anchor" aria-label="anchor" href="#load-package-and-example-data"></a>
+<h2 id="load-celldeep-and-example-data">Load CellDEEP and example data<a class="anchor" aria-label="anchor" href="#load-celldeep-and-example-data"></a>
 </h2>
+<p>Load CellDEEP and the example <code>sim</code> dataset:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">CellDEEP</span><span class="op">)</span></span>
+<span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"sim"</span><span class="op">)</span></span></code></pre></div>
+<p>The example object contains the metadata columns used throughout this
+vignette:</p>
+<ul>
+<li>
+<code>Status</code>: biological group</li>
+<li>
+<code>DonorID</code>: sample or donor</li>
+<li>
+<code>cluster_id</code>: cell cluster</li>
+</ul>
+<p>These column names are passed directly to CellDEEP, so your own
+Seurat object does not need to use these exact names.</p>
 </div>
 <div class="section level2">
-<h2 id="step-1-run-de-directly-with-findmarker-celldeep">Step 1: Run DE directly with FindMarker.CellDEEP<a class="anchor" aria-label="anchor" href="#step-1-run-de-directly-with-findmarker-celldeep"></a>
+<h2 id="workflow-1-differential-expression-with-celldeep">Workflow 1: Differential expression with CellDEEP<a class="anchor" aria-label="anchor" href="#workflow-1-differential-expression-with-celldeep"></a>
 </h2>
-<p><code>FindMarker.CellDEEP</code> includes metadata preparation
-internally. Key parameters to set: - <code>group_id</code>,
-<code>sample_id</code>, <code>cluster_id</code>: metadata column names
-in your Seurat object - <code>ident.1</code>, <code>ident.2</code>: two
-groups to compare - <code>cell_selection</code>: how to select cells for
-pooling (<code>"kmean"</code> or <code>"random"</code>) -
-<code>readcounts</code>: how to aggregate counts in pooled cells
-(<code>"sum"</code> or <code>"mean"</code>) -
-<code>min_cells_per_subgroup</code>: minimum cells required in each
-sample-cluster subgroup for pooling</p>
+<p>The simplest way to use CellDEEP is with
+<code><a href="../reference/FindMarker.CellDEEP.html">FindMarker.CellDEEP()</a></code>.</p>
+<p>This function handles metadata preparation, pseudocell pooling, and
+differential expression testing in a single workflow.</p>
+<p>Important arguments include:</p>
+<ul>
+<li>
+<code>group_id</code>: metadata column defining the biological
+groups to compare</li>
+<li>
+<code>sample_id</code>: metadata column identifying samples or
+donors</li>
+<li>
+<code>cluster_id</code>: metadata column identifying cell
+clusters</li>
+<li>
+<code>ident.1</code> and <code>ident.2</code>: groups to
+compare</li>
+<li>
+<code>cell_selection</code>: method used to construct pseudocells
+(<code>"kmean"</code> or <code>"random"</code>)</li>
+<li>
+<code>readcounts</code>: method used to aggregate expression within
+pseudocells (<code>"sum"</code> or <code>"mean"</code>)</li>
+<li>
+<code>n_cells</code>: number of cells contributing to each
+pseudocell</li>
+<li>
+<code>min_cells_per_subgroup</code>: minimum number of cells
+required within each sample-cluster subgroup before pooling</li>
+<li>
+<code>test.use</code>: differential expression method passed to the
+DE analysis</li>
+<li>
+<code>logfc.threshold</code>: minimum log-fold-change threshold</li>
+</ul>
+<p>For example, we can compare Case and Control cells using random
+pooling:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">de.test</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/FindMarker.CellDEEP.html">FindMarker.CellDEEP</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">de_genes</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/FindMarker.CellDEEP.html">FindMarker.CellDEEP</a></span><span class="op">(</span></span>
 <span>  <span class="va">sim</span>,</span>
 <span>  group_id <span class="op">=</span> <span class="st">"Status"</span>,</span>
 <span>  sample_id <span class="op">=</span> <span class="st">"DonorID"</span>,</span>
 <span>  cluster_id <span class="op">=</span> <span class="st">"cluster_id"</span>,</span>
 <span>  Pool <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  test.use <span class="op">=</span> <span class="st">"wilcox"</span>,</span>
+<span>  test.use <span class="op">=</span> <span class="st">"MAST"</span>,</span>
 <span>  n_cells <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>  min_cells_per_subgroup <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  cell_selection <span class="op">=</span> <span class="st">"random"</span>,</span>
@@ -122,6 +185,15 @@ sample-cluster subgroup for pooling</p>
 <span><span class="co">#&gt; Start Pooling.....</span></span>
 <span><span class="co">#&gt; Pooling...</span></span>
 <span><span class="co">#&gt; Warning: Data is of class matrix. Coercing to dgCMatrix.</span></span>
+<span><span class="co">#&gt; Pooling summary (random):</span></span>
+<span><span class="co">#&gt; Input cells: 200</span></span>
+<span><span class="co">#&gt; Cells kept in pooled pseudocells: 180</span></span>
+<span><span class="co">#&gt; Cells not kept (approx): 20</span></span>
+<span><span class="co">#&gt; Skipped empty groups: 0</span></span>
+<span><span class="co">#&gt; Skipped empty clusters: 0</span></span>
+<span><span class="co">#&gt; Skipped empty samples: 20</span></span>
+<span><span class="co">#&gt; Skipped subgroups (&lt;= min_cells_per_subgroup): 0</span></span>
+<span><span class="co">#&gt; Dropped remainder cells (&lt; n_cells) after random pooling: 20</span></span>
 <span><span class="co">#&gt; FindMarker running.....</span></span>
 <span><span class="co">#&gt; 1st ident is:</span></span>
 <span><span class="co">#&gt; Case</span></span>
@@ -132,40 +204,325 @@ sample-cluster subgroup for pooling</p>
 <span><span class="co">#&gt; Normalizing layer: counts</span></span>
 <span><span class="co">#&gt; Finding variable features for layer counts</span></span>
 <span><span class="co">#&gt; Centering and scaling data matrix</span></span>
-<span><span class="co">#&gt; For a (much!) faster implementation of the Wilcoxon Rank Sum Test,</span></span>
-<span><span class="co">#&gt; (default method for FindMarkers) please install the presto package</span></span>
-<span><span class="co">#&gt; --------------------------------------------</span></span>
-<span><span class="co">#&gt; install.packages('devtools')</span></span>
-<span><span class="co">#&gt; devtools::install_github('immunogenomics/presto')</span></span>
-<span><span class="co">#&gt; --------------------------------------------</span></span>
-<span><span class="co">#&gt; After installation of presto, Seurat will automatically use the more </span></span>
-<span><span class="co">#&gt; efficient implementation (no further action necessary).</span></span>
-<span><span class="co">#&gt; This message will be shown once per session</span></span>
-<span><span class="co">#&gt; 20</span></span>
-<span><span class="co">#&gt; Gene1728Gene1992Gene1626Gene1864Gene1715Gene1807</span></span></code></pre></div>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Done!</span></span>
+<span><span class="co">#&gt; Combining coefficients and standard errors</span></span>
+<span><span class="co">#&gt; Calculating log-fold changes</span></span>
+<span><span class="co">#&gt; Calculating likelihood ratio tests</span></span>
+<span><span class="co">#&gt; Refitting on reduced model...</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Done!</span></span>
+<span><span class="co">#&gt; 27</span></span>
+<span><span class="co">#&gt; Gene1728Gene1992Gene1864Gene1715Gene1807Gene1626</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">de_genes</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "Gene1728" "Gene1992" "Gene1864" "Gene1715" "Gene1807" "Gene1626"</span></span></code></pre></div>
+<p>By default, CellDEEP returns the names of genes passing the
+differential expression filters.</p>
 </div>
 <div class="section level2">
-<h2 id="step-2-pool-cells-only-optional">Step 2: Pool cells only (optional)<a class="anchor" aria-label="anchor" href="#step-2-pool-cells-only-optional"></a>
+<h2 id="controlling-the-differential-expression-output">Controlling the differential expression output<a class="anchor" aria-label="anchor" href="#controlling-the-differential-expression-output"></a>
 </h2>
-<p>Use these functions if you want pooled objects without running DE
-immediately.</p>
-<p><code>min_cells_per_subgroup</code> means the minimum number of cells
-required in each <code>sample_id x cluster_id</code> subgroup before
-pooling is performed.</p>
-<p>Pooling functions use standardized metadata fields
-(<code>sample_id</code>, <code>group_id</code>,
-<code>cluster_id</code>), so prepare once before pooling:</p>
+<p><code><a href="../reference/FindMarker.CellDEEP.html">FindMarker.CellDEEP()</a></code> allows you to control how much
+information is returned.</p>
+<p>Depending on your downstream analysis, you can obtain:</p>
+<ol style="list-style-type: decimal">
+<li>significant gene names only;</li>
+<li>a filtered DE table containing statistics such as p-values and
+log-fold changes; or</li>
+<li>the complete, unfiltered DE table.</li>
+</ol>
+<div class="section level3">
+<h3 id="return-significant-gene-names-only">Return significant gene names only<a class="anchor" aria-label="anchor" href="#return-significant-gene-names-only"></a>
+</h3>
+<p>By default, <code>name.only = TRUE</code>.</p>
+<p>Therefore, the standard CellDEEP call returns the names of genes
+passing the DE filters:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">de_genes</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/FindMarker.CellDEEP.html">FindMarker.CellDEEP</a></span><span class="op">(</span></span>
+<span>  <span class="va">sim</span>,</span>
+<span>  group_id <span class="op">=</span> <span class="st">"Status"</span>,</span>
+<span>  sample_id <span class="op">=</span> <span class="st">"DonorID"</span>,</span>
+<span>  cluster_id <span class="op">=</span> <span class="st">"cluster_id"</span>,</span>
+<span>  Pool <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  test.use <span class="op">=</span> <span class="st">"MAST"</span>,</span>
+<span>  n_cells <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>  min_cells_per_subgroup <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  cell_selection <span class="op">=</span> <span class="st">"random"</span>,</span>
+<span>  readcounts <span class="op">=</span> <span class="st">"sum"</span>,</span>
+<span>  logfc.threshold <span class="op">=</span> <span class="fl">0.25</span>,</span>
+<span>  ident.1 <span class="op">=</span> <span class="st">"Case"</span>,</span>
+<span>  ident.2 <span class="op">=</span> <span class="st">"Control"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt; Start Pooling.....</span></span>
+<span><span class="co">#&gt; Pooling...</span></span>
+<span><span class="co">#&gt; Warning: Data is of class matrix. Coercing to dgCMatrix.</span></span>
+<span><span class="co">#&gt; Pooling summary (random):</span></span>
+<span><span class="co">#&gt; Input cells: 200</span></span>
+<span><span class="co">#&gt; Cells kept in pooled pseudocells: 180</span></span>
+<span><span class="co">#&gt; Cells not kept (approx): 20</span></span>
+<span><span class="co">#&gt; Skipped empty groups: 0</span></span>
+<span><span class="co">#&gt; Skipped empty clusters: 0</span></span>
+<span><span class="co">#&gt; Skipped empty samples: 20</span></span>
+<span><span class="co">#&gt; Skipped subgroups (&lt;= min_cells_per_subgroup): 0</span></span>
+<span><span class="co">#&gt; Dropped remainder cells (&lt; n_cells) after random pooling: 20</span></span>
+<span><span class="co">#&gt; FindMarker running.....</span></span>
+<span><span class="co">#&gt; 1st ident is:</span></span>
+<span><span class="co">#&gt; Case</span></span>
+<span><span class="co">#&gt; 2nd ident is:</span></span>
+<span><span class="co">#&gt; Control</span></span>
+<span><span class="co">#&gt; group by:</span></span>
+<span><span class="co">#&gt; group_id</span></span>
+<span><span class="co">#&gt; Normalizing layer: counts</span></span>
+<span><span class="co">#&gt; Finding variable features for layer counts</span></span>
+<span><span class="co">#&gt; Centering and scaling data matrix</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Done!</span></span>
+<span><span class="co">#&gt; Combining coefficients and standard errors</span></span>
+<span><span class="co">#&gt; Calculating log-fold changes</span></span>
+<span><span class="co">#&gt; Calculating likelihood ratio tests</span></span>
+<span><span class="co">#&gt; Refitting on reduced model...</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Done!</span></span>
+<span><span class="co">#&gt; 27</span></span>
+<span><span class="co">#&gt; Gene1728Gene1992Gene1864Gene1715Gene1807Gene1626</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">de_genes</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "Gene1728" "Gene1992" "Gene1864" "Gene1715" "Gene1807" "Gene1626"</span></span></code></pre></div>
+<p>This output is convenient when you only need a list of differentially
+expressed genes for downstream analyses or visualization.</p>
+</div>
+<div class="section level3">
+<h3 id="return-de-results-with-statistics">Return DE results with statistics<a class="anchor" aria-label="anchor" href="#return-de-results-with-statistics"></a>
+</h3>
+<p>If you want to retain the complete statistics for genes passing the
+DE filters, set:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">name.only</span> <span class="op">=</span> <span class="cn">FALSE</span></span></code></pre></div>
+<p>For example:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">de_results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/FindMarker.CellDEEP.html">FindMarker.CellDEEP</a></span><span class="op">(</span></span>
+<span>  <span class="va">sim</span>,</span>
+<span>  group_id <span class="op">=</span> <span class="st">"Status"</span>,</span>
+<span>  sample_id <span class="op">=</span> <span class="st">"DonorID"</span>,</span>
+<span>  cluster_id <span class="op">=</span> <span class="st">"cluster_id"</span>,</span>
+<span>  Pool <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  test.use <span class="op">=</span> <span class="st">"MAST"</span>,</span>
+<span>  n_cells <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>  min_cells_per_subgroup <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  cell_selection <span class="op">=</span> <span class="st">"random"</span>,</span>
+<span>  readcounts <span class="op">=</span> <span class="st">"sum"</span>,</span>
+<span>  logfc.threshold <span class="op">=</span> <span class="fl">0.25</span>,</span>
+<span>  ident.1 <span class="op">=</span> <span class="st">"Case"</span>,</span>
+<span>  ident.2 <span class="op">=</span> <span class="st">"Control"</span>,</span>
+<span>  name.only <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt; Start Pooling.....</span></span>
+<span><span class="co">#&gt; Pooling...</span></span>
+<span><span class="co">#&gt; Warning: Data is of class matrix. Coercing to dgCMatrix.</span></span>
+<span><span class="co">#&gt; Pooling summary (random):</span></span>
+<span><span class="co">#&gt; Input cells: 200</span></span>
+<span><span class="co">#&gt; Cells kept in pooled pseudocells: 180</span></span>
+<span><span class="co">#&gt; Cells not kept (approx): 20</span></span>
+<span><span class="co">#&gt; Skipped empty groups: 0</span></span>
+<span><span class="co">#&gt; Skipped empty clusters: 0</span></span>
+<span><span class="co">#&gt; Skipped empty samples: 20</span></span>
+<span><span class="co">#&gt; Skipped subgroups (&lt;= min_cells_per_subgroup): 0</span></span>
+<span><span class="co">#&gt; Dropped remainder cells (&lt; n_cells) after random pooling: 20</span></span>
+<span><span class="co">#&gt; FindMarker running.....</span></span>
+<span><span class="co">#&gt; 1st ident is:</span></span>
+<span><span class="co">#&gt; Case</span></span>
+<span><span class="co">#&gt; 2nd ident is:</span></span>
+<span><span class="co">#&gt; Control</span></span>
+<span><span class="co">#&gt; group by:</span></span>
+<span><span class="co">#&gt; group_id</span></span>
+<span><span class="co">#&gt; Normalizing layer: counts</span></span>
+<span><span class="co">#&gt; Finding variable features for layer counts</span></span>
+<span><span class="co">#&gt; Centering and scaling data matrix</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Done!</span></span>
+<span><span class="co">#&gt; Combining coefficients and standard errors</span></span>
+<span><span class="co">#&gt; Calculating log-fold changes</span></span>
+<span><span class="co">#&gt; Calculating likelihood ratio tests</span></span>
+<span><span class="co">#&gt; Refitting on reduced model...</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Done!</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">de_results</span><span class="op">)</span></span>
+<span><span class="co">#&gt;                 p_val avg_log2FC pct.1 pct.2    p_val_adj</span></span>
+<span><span class="co">#&gt; Gene1728 2.135401e-18   3.493846   1.0 0.567 4.270801e-15</span></span>
+<span><span class="co">#&gt; Gene1992 5.520147e-15 -11.401061   0.0 0.900 1.104029e-11</span></span>
+<span><span class="co">#&gt; Gene1864 5.149952e-14 -10.188828   0.0 0.867 1.029990e-10</span></span>
+<span><span class="co">#&gt; Gene1715 5.149952e-14  -9.855602   0.0 0.867 1.029990e-10</span></span>
+<span><span class="co">#&gt; Gene1807 3.904984e-13  -9.667764   0.0 0.833 7.809967e-10</span></span>
+<span><span class="co">#&gt; Gene1626 7.039584e-13  -3.879532   0.2 1.000 1.407917e-09</span></span></code></pre></div>
+<p>This output is useful when you want to inspect quantities such as
+p-values, adjusted p-values, and log-fold changes.</p>
+<p>It is also the appropriate format for creating DE plots or comparing
+CellDEEP results with another differential expression method.</p>
+</div>
+<div class="section level3">
+<h3 id="return-the-full-de-results">Return the full DE results<a class="anchor" aria-label="anchor" href="#return-the-full-de-results"></a>
+</h3>
+<p>In some analyses, filtering genes before downstream analysis is
+undesirable.</p>
+<p>For example, methods such as Gene Set Enrichment Analysis (GSEA)
+generally require a ranked statistic across the full set of tested
+genes.</p>
+<p>To retain the complete DE output without significance filtering,
+use:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">name.only</span> <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="va">full_list</span> <span class="op">=</span> <span class="cn">TRUE</span></span></code></pre></div>
+<p>For example:</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">de_full</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/FindMarker.CellDEEP.html">FindMarker.CellDEEP</a></span><span class="op">(</span></span>
+<span>  <span class="va">sim</span>,</span>
+<span>  group_id <span class="op">=</span> <span class="st">"Status"</span>,</span>
+<span>  sample_id <span class="op">=</span> <span class="st">"DonorID"</span>,</span>
+<span>  cluster_id <span class="op">=</span> <span class="st">"cluster_id"</span>,</span>
+<span>  Pool <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  test.use <span class="op">=</span> <span class="st">"MAST"</span>,</span>
+<span>  n_cells <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>  min_cells_per_subgroup <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  cell_selection <span class="op">=</span> <span class="st">"random"</span>,</span>
+<span>  readcounts <span class="op">=</span> <span class="st">"sum"</span>,</span>
+<span>  logfc.threshold <span class="op">=</span> <span class="fl">0.25</span>,</span>
+<span>  ident.1 <span class="op">=</span> <span class="st">"Case"</span>,</span>
+<span>  ident.2 <span class="op">=</span> <span class="st">"Control"</span>,</span>
+<span>  name.only <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  full_list <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt; Start Pooling.....</span></span>
+<span><span class="co">#&gt; Pooling...</span></span>
+<span><span class="co">#&gt; Warning: Data is of class matrix. Coercing to dgCMatrix.</span></span>
+<span><span class="co">#&gt; Pooling summary (random):</span></span>
+<span><span class="co">#&gt; Input cells: 200</span></span>
+<span><span class="co">#&gt; Cells kept in pooled pseudocells: 180</span></span>
+<span><span class="co">#&gt; Cells not kept (approx): 20</span></span>
+<span><span class="co">#&gt; Skipped empty groups: 0</span></span>
+<span><span class="co">#&gt; Skipped empty clusters: 0</span></span>
+<span><span class="co">#&gt; Skipped empty samples: 20</span></span>
+<span><span class="co">#&gt; Skipped subgroups (&lt;= min_cells_per_subgroup): 0</span></span>
+<span><span class="co">#&gt; Dropped remainder cells (&lt; n_cells) after random pooling: 20</span></span>
+<span><span class="co">#&gt; FindMarker running.....</span></span>
+<span><span class="co">#&gt; 1st ident is:</span></span>
+<span><span class="co">#&gt; Case</span></span>
+<span><span class="co">#&gt; 2nd ident is:</span></span>
+<span><span class="co">#&gt; Control</span></span>
+<span><span class="co">#&gt; group by:</span></span>
+<span><span class="co">#&gt; group_id</span></span>
+<span><span class="co">#&gt; Normalizing layer: counts</span></span>
+<span><span class="co">#&gt; Finding variable features for layer counts</span></span>
+<span><span class="co">#&gt; Centering and scaling data matrix</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Done!</span></span>
+<span><span class="co">#&gt; Combining coefficients and standard errors</span></span>
+<span><span class="co">#&gt; Calculating log-fold changes</span></span>
+<span><span class="co">#&gt; Calculating likelihood ratio tests</span></span>
+<span><span class="co">#&gt; Refitting on reduced model...</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Done!</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">de_full</span><span class="op">)</span></span>
+<span><span class="co">#&gt;                 p_val avg_log2FC pct.1 pct.2    p_val_adj</span></span>
+<span><span class="co">#&gt; Gene1728 2.135401e-18   3.493846   1.0 0.567 4.270801e-15</span></span>
+<span><span class="co">#&gt; Gene1992 5.520147e-15 -11.401061   0.0 0.900 1.104029e-11</span></span>
+<span><span class="co">#&gt; Gene1864 5.149952e-14 -10.188828   0.0 0.867 1.029990e-10</span></span>
+<span><span class="co">#&gt; Gene1715 5.149952e-14  -9.855602   0.0 0.867 1.029990e-10</span></span>
+<span><span class="co">#&gt; Gene1807 3.904984e-13  -9.667764   0.0 0.833 7.809967e-10</span></span>
+<span><span class="co">#&gt; Gene1626 7.039584e-13  -3.879532   0.2 1.000 1.407917e-09</span></span></code></pre></div>
+<p>We can compare the number of genes returned by the filtered and full
+outputs:</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">de_results</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 27</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">de_full</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 1054</span></span></code></pre></div>
+<p><code>de_results</code> contains genes retained after CellDEEP’s DE
+filtering, whereas <code>de_full</code> contains the complete set of
+tested genes.</p>
+</div>
+<div class="section level3">
+<h3 id="summary-of-output-options">Summary of output options<a class="anchor" aria-label="anchor" href="#summary-of-output-options"></a>
+</h3>
+<table class="table">
+<colgroup>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+</colgroup>
+<thead><tr class="header">
+<th>Setting</th>
+<th>Output</th>
+<th>Typical use</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>name.only = TRUE</code></td>
+<td>Significant gene names only</td>
+<td>Gene lists and quick downstream analyses</td>
+</tr>
+<tr class="even">
+<td><code>name.only = FALSE</code></td>
+<td>Filtered DE table with statistics</td>
+<td>Inspecting p-values, logFC, and DE results</td>
+</tr>
+<tr class="odd">
+<td><code>name.only = FALSE, full_list = TRUE</code></td>
+<td>Full DE table without significance filtering</td>
+<td>GSEA, gene ranking, and method comparisons</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="section level2">
+<h2 id="workflow-2-generate-pseudocells-without-de-testing">Workflow 2: Generate pseudocells without DE testing<a class="anchor" aria-label="anchor" href="#workflow-2-generate-pseudocells-without-de-testing"></a>
+</h2>
+<p><code><a href="../reference/FindMarker.CellDEEP.html">FindMarker.CellDEEP()</a></code> is the simplest option when
+differential expression is your final goal.</p>
+<p>However, CellDEEP can also be used to generate pseudocells
+<strong>without immediately performing differential expression
+testing</strong>.</p>
+<p>This workflow is useful when you want to:</p>
+<ul>
+<li>inspect the pooled data;</li>
+<li>compare different pooling strategies;</li>
+<li>visualize the pseudocells; or</li>
+<li>use the pooled object in another downstream analysis.</li>
+</ul>
+<p>This is an alternative to the workflow above; it is <strong>not a
+required preprocessing step</strong> for
+<code><a href="../reference/FindMarker.CellDEEP.html">FindMarker.CellDEEP()</a></code>.</p>
+<div class="section level3">
+<h3 id="prepare-metadata-for-pooling">Prepare metadata for pooling<a class="anchor" aria-label="anchor" href="#prepare-metadata-for-pooling"></a>
+</h3>
+<p>The standalone pooling functions use standardized metadata
+fields:</p>
+<ul>
+<li><code>sample_id</code></li>
+<li><code>group_id</code></li>
+<li><code>cluster_id</code></li>
+</ul>
+<p>Use <code><a href="../reference/prepare_data.html">prepare_data()</a></code> to create these fields from the
+corresponding columns in your Seurat object:</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pool_input</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prepare_data.html">prepare_data</a></span><span class="op">(</span></span>
 <span>  <span class="va">sim</span>,</span>
 <span>  sample_id <span class="op">=</span> <span class="st">"DonorID"</span>,</span>
 <span>  group_id <span class="op">=</span> <span class="st">"Status"</span>,</span>
 <span>  cluster_id <span class="op">=</span> <span class="st">"cluster_id"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+<p>The resulting object can then be passed to either of the CellDEEP
+pooling methods.</p>
+</div>
 <div class="section level3">
 <h3 id="k-means-pooling">K-means pooling<a class="anchor" aria-label="anchor" href="#k-means-pooling"></a>
 </h3>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<p><code><a href="../reference/CellDEEP.Kmean.html">CellDEEP.Kmean()</a></code> constructs pseudocells using a
+k-means-based cell selection strategy.</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pooled_kmean</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CellDEEP.Kmean.html">CellDEEP.Kmean</a></span><span class="op">(</span></span>
 <span>  <span class="va">pool_input</span>,</span>
 <span>  readcounts <span class="op">=</span> <span class="st">"sum"</span>,</span>
@@ -177,16 +534,40 @@ pooling is performed.</p>
 <span><span class="co">#&gt; Warning: Data is of class matrix. Coercing to dgCMatrix.</span></span>
 <span><span class="co">#&gt; Drop out cell number during kmean pooling is:</span></span>
 <span><span class="co">#&gt; 24</span></span>
+<span><span class="co">#&gt; Pooling summary (kmean):</span></span>
+<span><span class="co">#&gt; Input cells: 200</span></span>
+<span><span class="co">#&gt; Cells kept in pooled pseudocells: 176</span></span>
+<span><span class="co">#&gt; Cells not kept (approx): 24</span></span>
+<span><span class="co">#&gt; Skipped empty groups: 0</span></span>
+<span><span class="co">#&gt; Skipped empty clusters: 0</span></span>
+<span><span class="co">#&gt; Skipped empty samples: 20</span></span>
+<span><span class="co">#&gt; Skipped subgroups (&lt;= min_cells_per_subgroup): 0</span></span>
+<span><span class="co">#&gt; Dropped singleton cells after kmeans split: 24</span></span>
+<span></span>
 <span><span class="va">pooled_kmean</span></span>
 <span><span class="co">#&gt; An object of class Seurat </span></span>
 <span><span class="co">#&gt; 2000 features across 56 samples within 1 assay </span></span>
 <span><span class="co">#&gt; Active assay: RNA (2000 features, 0 variable features)</span></span>
 <span><span class="co">#&gt;  1 layer present: counts</span></span></code></pre></div>
+<p>Here:</p>
+<ul>
+<li>
+<code>n_cells = 3</code> specifies the number of cells contributing
+to each pseudocell;</li>
+<li>
+<code>readcounts = "sum"</code> sums their counts; and</li>
+<li>
+<code>min_cells_per_subgroup = 1</code> controls the minimum number
+of cells required within each sample-cluster subgroup before
+pooling.</li>
+</ul>
 </div>
 <div class="section level3">
 <h3 id="random-pooling">Random pooling<a class="anchor" aria-label="anchor" href="#random-pooling"></a>
 </h3>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<p>Alternatively, <code><a href="../reference/CellDEEP.Random.html">CellDEEP.Random()</a></code> constructs pseudocells
+by randomly selecting cells within the corresponding subgroups.</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pooled_random</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CellDEEP.Random.html">CellDEEP.Random</a></span><span class="op">(</span></span>
 <span>  <span class="va">pool_input</span>,</span>
 <span>  readcounts <span class="op">=</span> <span class="st">"sum"</span>,</span>
@@ -196,14 +577,56 @@ pooling is performed.</p>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; Pooling...</span></span>
 <span><span class="co">#&gt; Warning: Data is of class matrix. Coercing to dgCMatrix.</span></span>
+<span><span class="co">#&gt; Pooling summary (random):</span></span>
+<span><span class="co">#&gt; Input cells: 200</span></span>
+<span><span class="co">#&gt; Cells kept in pooled pseudocells: 160</span></span>
+<span><span class="co">#&gt; Cells not kept (approx): 40</span></span>
+<span><span class="co">#&gt; Skipped empty groups: 0</span></span>
+<span><span class="co">#&gt; Skipped empty clusters: 0</span></span>
+<span><span class="co">#&gt; Skipped empty samples: 20</span></span>
+<span><span class="co">#&gt; Skipped subgroups (&lt;= min_cells_per_subgroup): 0</span></span>
+<span><span class="co">#&gt; Dropped remainder cells (&lt; n_cells) after random pooling: 40</span></span>
+<span></span>
 <span><span class="va">pooled_random</span></span>
 <span><span class="co">#&gt; An object of class Seurat </span></span>
 <span><span class="co">#&gt; 2000 features across 32 samples within 1 assay </span></span>
 <span><span class="co">#&gt; Active assay: RNA (2000 features, 0 variable features)</span></span>
 <span><span class="co">#&gt;  1 layer present: counts</span></span></code></pre></div>
-<p>If no genes pass the adjusted p-value filter in this small example
-dataset, try a larger dataset or set <code>full_list = TRUE</code>.</p>
+<p>The resulting pooled objects can be inspected or used independently
+in downstream analyses.</p>
 </div>
+</div>
+<div class="section level2">
+<h2 id="which-workflow-should-i-use">Which workflow should I use?<a class="anchor" aria-label="anchor" href="#which-workflow-should-i-use"></a>
+</h2>
+<p>If your goal is <strong>differential expression</strong>, start
+with:</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/FindMarker.CellDEEP.html">FindMarker.CellDEEP</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p>This handles the required preparation and pooling internally.</p>
+<p>If you only need the final DE gene names, use the default
+<code>name.only = TRUE</code>.</p>
+<p>If you need p-values, log-fold changes, and other DE statistics,
+use:</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">name.only</span> <span class="op">=</span> <span class="cn">FALSE</span></span></code></pre></div>
+<p>If you need the complete gene ranking, for example for GSEA or
+comparisons with other DE methods, use:</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">name.only</span> <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="va">full_list</span> <span class="op">=</span> <span class="cn">TRUE</span></span></code></pre></div>
+<p>If your goal is instead to <strong>construct and inspect
+pseudocells</strong>, use:</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/prepare_data.html">prepare_data</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/CellDEEP.Kmean.html">CellDEEP.Kmean</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p>or:</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/prepare_data.html">prepare_data</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/CellDEEP.Random.html">CellDEEP.Random</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p>This separation allows CellDEEP to be used either as a complete
+differential expression workflow or as a standalone
+pseudocell-generation method.</p>
 </div>
   </div>
 
