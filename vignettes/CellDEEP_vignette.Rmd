@@ -8,38 +8,72 @@ vignette: >
 ---
 
 ```{r, include = FALSE}
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
 ```
 
-## What CellDEEP does
+## Introduction to CellDEEP
 
-CellDEEP reduces scRNA-seq sparsity by pooling cells into pseudocells before DE testing.
+Single-cell RNA sequencing (scRNA-seq) provides gene expression measurements at single-cell resolution, but its high sparsity and dropout rates can make differential expression (DE) analysis challenging.
 
-## Load package and example data
+**CellDEEP** reduces scRNA-seq sparsity by pooling cells into pseudocells before differential expression testing. It was developed to bridge the gap between robust but coarse pseudobulk approaches and sensitive but potentially biased cell-level methods.
 
-```{r, load_data}
+CellDEEP provides two main workflows:
+
+1. **Run differential expression directly** with `FindMarker.CellDEEP()`. This is the recommended workflow when DE testing is your final goal.
+2. **Generate pseudocells only** with `CellDEEP.Kmean()` or `CellDEEP.Random()`. This is useful when you want to inspect or reuse the pooled object in downstream analyses.
+
+These are alternative workflows. You do **not** need to run the pooling functions before using `FindMarker.CellDEEP()`.
+
+## Load CellDEEP and example data
+
+Load CellDEEP and the example `sim` dataset:
+
+```{r load_data}
 library(CellDEEP)
+
 data("sim")
 ```
 
-## Step 1: Run DE directly with FindMarker.CellDEEP
+The example object contains the metadata columns used throughout this vignette:
 
-`FindMarker.CellDEEP` includes metadata preparation internally.
-Key parameters to set:
-- `group_id`, `sample_id`, `cluster_id`: metadata column names in your Seurat object
-- `ident.1`, `ident.2`: two groups to compare
-- `cell_selection`: how to select cells for pooling (`"kmean"` or `"random"`)
-- `readcounts`: how to aggregate counts in pooled cells (`"sum"` or `"mean"`)
-- `min_cells_per_subgroup`: minimum cells required in each sample-cluster subgroup for pooling
+- `Status`: biological group
+- `DonorID`: sample or donor
+- `cluster_id`: cell cluster
 
-```{r}
-de.test <- FindMarker.CellDEEP(
+These column names are passed directly to CellDEEP, so your own Seurat object does not need to use these exact names.
+
+## Workflow 1: Differential expression with CellDEEP
+
+The simplest way to use CellDEEP is with `FindMarker.CellDEEP()`.
+
+This function handles metadata preparation, pseudocell pooling, and differential expression testing in a single workflow.
+
+Important arguments include:
+
+- `group_id`: metadata column defining the biological groups to compare
+- `sample_id`: metadata column identifying samples or donors
+- `cluster_id`: metadata column identifying cell clusters
+- `ident.1` and `ident.2`: groups to compare
+- `cell_selection`: method used to construct pseudocells (`"kmean"` or `"random"`)
+- `readcounts`: method used to aggregate expression within pseudocells (`"sum"` or `"mean"`)
+- `n_cells`: number of cells contributing to each pseudocell
+- `min_cells_per_subgroup`: minimum number of cells required within each sample-cluster subgroup before pooling
+- `test.use`: differential expression method passed to the DE analysis
+- `logfc.threshold`: minimum log-fold-change threshold
+
+For example, we can compare Case and Control cells using random pooling:
+
+```{r celldeep_de}
+de_genes <- FindMarker.CellDEEP(
   sim,
   group_id = "Status",
   sample_id = "DonorID",
   cluster_id = "cluster_id",
   Pool = TRUE,
-  test.use = "wilcox",
+  test.use = "MAST",
   n_cells = 3,
   min_cells_per_subgroup = 1,
   cell_selection = "random",
@@ -48,19 +82,167 @@ de.test <- FindMarker.CellDEEP(
   ident.1 = "Case",
   ident.2 = "Control"
 )
+
+head(de_genes)
 ```
 
-## Step 2: Pool cells only (optional)
+By default, CellDEEP returns the names of genes passing the differential expression filters.
 
-Use these functions if you want pooled objects without running DE immediately.
+## Controlling the differential expression output
 
-`min_cells_per_subgroup` means the minimum number of cells required in each
-`sample_id x cluster_id` subgroup before pooling is performed.
+`FindMarker.CellDEEP()` allows you to control how much information is returned.
 
-Pooling functions use standardized metadata fields (`sample_id`, `group_id`, `cluster_id`),
-so prepare once before pooling:
+Depending on your downstream analysis, you can obtain:
 
-```{r}
+1. significant gene names only;
+2. a filtered DE table containing statistics such as p-values and log-fold changes; or
+3. the complete, unfiltered DE table.
+
+### Return significant gene names only
+
+By default, `name.only = TRUE`.
+
+Therefore, the standard CellDEEP call returns the names of genes passing the DE filters:
+
+```{r gene_names}
+de_genes <- FindMarker.CellDEEP(
+  sim,
+  group_id = "Status",
+  sample_id = "DonorID",
+  cluster_id = "cluster_id",
+  Pool = TRUE,
+  test.use = "MAST",
+  n_cells = 3,
+  min_cells_per_subgroup = 1,
+  cell_selection = "random",
+  readcounts = "sum",
+  logfc.threshold = 0.25,
+  ident.1 = "Case",
+  ident.2 = "Control"
+)
+
+head(de_genes)
+```
+
+This output is convenient when you only need a list of differentially expressed genes for downstream analyses or visualization.
+
+### Return DE results with statistics
+
+If you want to retain the complete statistics for genes passing the DE filters, set:
+
+```r
+name.only = FALSE
+```
+
+For example:
+
+```{r de_statistics}
+de_results <- FindMarker.CellDEEP(
+  sim,
+  group_id = "Status",
+  sample_id = "DonorID",
+  cluster_id = "cluster_id",
+  Pool = TRUE,
+  test.use = "MAST",
+  n_cells = 3,
+  min_cells_per_subgroup = 1,
+  cell_selection = "random",
+  readcounts = "sum",
+  logfc.threshold = 0.25,
+  ident.1 = "Case",
+  ident.2 = "Control",
+  name.only = FALSE
+)
+
+head(de_results)
+```
+
+This output is useful when you want to inspect quantities such as p-values, adjusted p-values, and log-fold changes.
+
+It is also the appropriate format for creating DE plots or comparing CellDEEP results with another differential expression method.
+
+### Return the full DE results
+
+In some analyses, filtering genes before downstream analysis is undesirable.
+
+For example, methods such as Gene Set Enrichment Analysis (GSEA) generally require a ranked statistic across the full set of tested genes.
+
+To retain the complete DE output without significance filtering, use:
+
+```r
+name.only = FALSE
+full_list = TRUE
+```
+
+For example:
+
+```{r full_de}
+de_full <- FindMarker.CellDEEP(
+  sim,
+  group_id = "Status",
+  sample_id = "DonorID",
+  cluster_id = "cluster_id",
+  Pool = TRUE,
+  test.use = "MAST",
+  n_cells = 3,
+  min_cells_per_subgroup = 1,
+  cell_selection = "random",
+  readcounts = "sum",
+  logfc.threshold = 0.25,
+  ident.1 = "Case",
+  ident.2 = "Control",
+  name.only = FALSE,
+  full_list = TRUE
+)
+
+head(de_full)
+```
+
+We can compare the number of genes returned by the filtered and full outputs:
+
+```{r compare_filtered_full}
+nrow(de_results)
+nrow(de_full)
+```
+
+`de_results` contains genes retained after CellDEEP's DE filtering, whereas `de_full` contains the complete set of tested genes.
+
+### Summary of output options
+
+| Setting | Output | Typical use |
+|---|---|---|
+| `name.only = TRUE` | Significant gene names only | Gene lists and quick downstream analyses |
+| `name.only = FALSE` | Filtered DE table with statistics | Inspecting p-values, logFC, and DE results |
+| `name.only = FALSE, full_list = TRUE` | Full DE table without significance filtering | GSEA, gene ranking, and method comparisons |
+
+
+
+## Workflow 2: Generate pseudocells without DE testing
+
+`FindMarker.CellDEEP()` is the simplest option when differential expression is your final goal.
+
+However, CellDEEP can also be used to generate pseudocells **without immediately performing differential expression testing**.
+
+This workflow is useful when you want to:
+
+- inspect the pooled data;
+- compare different pooling strategies;
+- visualize the pseudocells; or
+- use the pooled object in another downstream analysis.
+
+This is an alternative to the workflow above; it is **not a required preprocessing step** for `FindMarker.CellDEEP()`.
+
+### Prepare metadata for pooling
+
+The standalone pooling functions use standardized metadata fields:
+
+- `sample_id`
+- `group_id`
+- `cluster_id`
+
+Use `prepare_data()` to create these fields from the corresponding columns in your Seurat object:
+
+```{r prepare_pooling}
 pool_input <- prepare_data(
   sim,
   sample_id = "DonorID",
@@ -69,9 +251,13 @@ pool_input <- prepare_data(
 )
 ```
 
+The resulting object can then be passed to either of the CellDEEP pooling methods.
+
 ### K-means pooling
 
-```{r}
+`CellDEEP.Kmean()` constructs pseudocells using a k-means-based cell selection strategy.
+
+```{r kmean_pooling}
 pooled_kmean <- CellDEEP.Kmean(
   pool_input,
   readcounts = "sum",
@@ -79,12 +265,21 @@ pooled_kmean <- CellDEEP.Kmean(
   min_cells_per_subgroup = 1,
   assay_name = "RNA"
 )
+
 pooled_kmean
 ```
 
+Here:
+
+- `n_cells = 3` specifies the number of cells contributing to each pseudocell;
+- `readcounts = "sum"` sums their counts; and
+- `min_cells_per_subgroup = 1` controls the minimum number of cells required within each sample-cluster subgroup before pooling.
+
 ### Random pooling
 
-```{r}
+Alternatively, `CellDEEP.Random()` constructs pseudocells by randomly selecting cells within the corresponding subgroups.
+
+```{r random_pooling}
 pooled_random <- CellDEEP.Random(
   pool_input,
   readcounts = "sum",
@@ -92,7 +287,51 @@ pooled_random <- CellDEEP.Random(
   min_cells_per_subgroup = 1,
   assay_name = "RNA"
 )
+
 pooled_random
 ```
 
-If no genes pass the adjusted p-value filter in this small example dataset, try a larger dataset or set `full_list = TRUE`.
+The resulting pooled objects can be inspected or used independently in downstream analyses.
+
+## Which workflow should I use?
+
+If your goal is **differential expression**, start with:
+
+```r
+FindMarker.CellDEEP()
+```
+
+This handles the required preparation and pooling internally.
+
+If you only need the final DE gene names, use the default `name.only = TRUE`.
+
+If you need p-values, log-fold changes, and other DE statistics, use:
+
+```r
+name.only = FALSE
+```
+
+If you need the complete gene ranking, for example for GSEA or comparisons with other DE methods, use:
+
+```r
+name.only = FALSE
+full_list = TRUE
+```
+
+If your goal is instead to **construct and inspect pseudocells**, use:
+
+```r
+prepare_data()
+CellDEEP.Kmean()
+```
+
+or:
+
+```r
+prepare_data()
+CellDEEP.Random()
+```
+
+This separation allows CellDEEP to be used either as a complete differential expression workflow or as a standalone pseudocell-generation method.
+
+
